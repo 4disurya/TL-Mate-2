@@ -38,6 +38,8 @@ function handleRequest(e, method) {
       case 'register': result = actionRegister(payload); break;
       case 'changePassword': result = actionChangePassword(payload); break;
       case 'updateProfile': result = actionUpdateProfile(payload); break;
+      case 'getUsers': result = actionGetUsers(payload); break;
+      case 'resetPassword': result = actionResetPassword(payload); break;
       
       case 'getTools': result = actionGetTools(); break;
       case 'saveTool': result = actionSaveTool(payload); break;
@@ -139,6 +141,28 @@ function actionUpdateProfile(payload) {
   if (rowIndex === -1) return { success: false, error: 'User not found' };
   
   updateRow_('users', rowIndex, { photo_url: payload.photo_url }, usersSheet);
+  return { success: true };
+}
+
+function actionGetUsers(payload) {
+  if (payload.role !== 'admin') return { success: false, error: 'Unauthorized' };
+  const users = sheetToObjects('users').map(u => {
+    delete u.password;
+    return u;
+  });
+  return { success: true, data: users };
+}
+
+function actionResetPassword(payload) {
+  if (payload.role !== 'admin') return { success: false, error: 'Unauthorized' };
+  if (!payload.new_password || payload.new_password.length < 6) return { success: false, error: 'Password min 6 karakter' };
+  
+  const sheet = getSheet_('users');
+  const users = sheetToObjects('users', sheet);
+  const idx = users.findIndex(u => u.id == payload.user_id);
+  if (idx === -1) return { success: false, error: 'User tidak ditemukan' };
+  
+  updateRow_('users', idx, { password: hash_(payload.new_password) }, sheet);
   return { success: true };
 }
 

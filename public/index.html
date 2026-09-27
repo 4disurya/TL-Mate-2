@@ -224,9 +224,14 @@
                                     <p class="text-secondary text-sm mt-0.5">Hai, {{ user?.name }}</p>
                                 </div>
                             </div>
-                            <button v-if="user?.role === 'admin'" @click="navigate('/kelola-katalog')" class="ml-2 bg-brand-accent/10 text-brand-accent border border-brand-accent/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-brand-accent/20 transition-colors">
-                                Kelola Alat
-                            </button>
+                            <div v-if="user?.role === 'admin'" class="ml-2 flex flex-col gap-1">
+                                <button @click="navigate('/kelola-katalog')" class="bg-brand-accent/10 text-brand-accent border border-brand-accent/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-brand-accent/20 transition-colors">
+                                    Kelola Alat
+                                </button>
+                                <button @click="navigate('/kelola-pengguna')" class="bg-brand-info/10 text-brand-info border border-brand-info/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-brand-info/20 transition-colors text-center">
+                                    Kelola User
+                                </button>
+                            </div>
                         </div>
                         <div class="w-12 h-12 rounded-full border-2 border-brand-info overflow-hidden cursor-pointer" @click="navigate('/profile')">
                             <img :src="user?.photo_url" alt="Avatar" class="w-full h-full object-cover"/>
@@ -544,6 +549,39 @@
                         <button @click="navigate('/')" class="btn-lab-ghost w-full py-4">
                             Kembali ke Beranda
                         </button>
+                    </div>
+                </div>
+
+                <!-- KELOLA PENGGUNA VIEW -->
+                <div v-else-if="route === '/kelola-pengguna' && user?.role === 'admin'" class="flex-1 flex flex-col h-screen overflow-hidden" key="kelola-pengguna">
+                    <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex gap-3 items-center">
+                        <button @click="navigate('/home')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0 flex justify-center items-center">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-bold leading-none">Kelola Pengguna</h1>
+                            <p class="text-secondary text-sm mt-0.5">Manajemen Akun Mahasiswa</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar flex flex-col gap-4">
+                        <div v-for="u in users.filter(x => x.role !== 'admin')" :key="u.id" class="glass-card !p-4 flex flex-col gap-3">
+                            <div class="flex gap-4 items-center">
+                                <div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                                    <img :src="u.photo_url || 'https://ui-avatars.com/api/?name=' + u.name + '&background=2A6055&color=fff'" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-slate-800 leading-tight">{{ u.name }}</div>
+                                    <div class="text-[11px] text-secondary mt-0.5">NIM: {{ u.nim }}</div>
+                                    <div class="text-[11px] text-secondary">{{ u.email }}</div>
+                                </div>
+                            </div>
+                            <div class="border-t border-slate-200 pt-3 flex justify-end">
+                                <button @click="openResetModal(u.id)" class="text-xs font-bold text-brand-info px-3 py-1.5 bg-brand-info/10 rounded-full hover:bg-brand-info/20 transition-colors">
+                                    Reset Password
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -973,6 +1011,28 @@
                     </div>
 
                     <!-- Modals -->
+                    <!-- Reset Password Modal -->
+                    <div v-if="showResetModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm">
+                            <h2 class="font-bold text-brand-info uppercase text-xs tracking-wider mb-4 text-center">Reset Password Pengguna</h2>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Password Baru</label>
+                                    <input v-model="resetForm.new" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Minimal 6 karakter">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Konfirmasi Password</label>
+                                    <input v-model="resetForm.confirm" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <p v-if="resetError" class="text-red-500 text-xs text-center font-medium">{{ resetError }}</p>
+                                <div class="flex gap-3 mt-2">
+                                    <button @click="showResetModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
+                                    <button @click="doAdminResetPassword" class="bg-brand-info text-white flex-1 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-brand-info/90">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-if="showPasswordModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
                         <div class="glass-card w-full max-w-sm">
                             <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-4 text-center">Ubah Password</h2>
@@ -1041,7 +1101,7 @@
         const { createApp, ref, computed, onMounted, watch } = Vue;
 
         const USE_MOCK = false; // Set false to use real Google Apps Script backend
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwP2NGiVTrVppM2oAcBCydhxPxQA4SKNmaKDzPP6wKudsf0QygmKmP8BTb7sR6Szwii/exec'; // Replace later
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxW-J3rJfKR5m6hF49T4fJ1NVxvY4yAVkWaSqXs69F98QOVqgJ4YsnHmMQmEOMcjHTe/exec'; // Replace later
         const GAS_API_KEY = 'TL-MATE-2026';
 
         // --- MOCK DATABASE ---
@@ -1188,6 +1248,12 @@
                 const passwordForm = ref({ old: '', new: '', confirm: '' });
                 const passwordError = ref('');
                 const showHelpModal = ref(false);
+                
+                // Admin User Management
+                const showResetModal = ref(false);
+                const resetForm = ref({ new: '', confirm: '' });
+                const resetError = ref('');
+                const selectedUserId = ref(null);
                 const isLoading = ref(false);
                 const toast = ref({ show: false, message: '' });
                 const hasUnderstood = ref(false);
@@ -1238,6 +1304,8 @@
                                              resolve({ success: true, data: newUser });
                                          }
                                          break;
+                                     case 'getUsers': resolve({ success: true, data: users.value.map(u => ({...u, password: undefined})) }); break;
+                                     case 'resetPassword': resolve({ success: true }); break;
                                      case 'getTools': resolve({ success: true, data: tools.value }); break;
                                      case 'getSOPs': resolve({ success: true, data: sops.value }); break;
                                      case 'getQuizzes': resolve({ success: true, data: quizzes.value }); break;
@@ -1292,6 +1360,9 @@
                     sops.value = (await fetchData('getSOPs')).data || [];
                     quizzes.value = (await fetchData('getQuizzes')).data || [];
                     transactions.value = (await fetchData('getTransactions', { user_id: user.value.id, role: user.value.role })).data || [];
+                    if (user.value?.role === 'admin') {
+                        users.value = (await fetchData('getUsers', { role: 'admin' })).data || [];
+                    }
                 };
 
                 const doLogin = async () => {
@@ -1347,6 +1418,36 @@
                     } else {
                         registerError.value = res.error || "Pendaftaran gagal";
                     }
+                };
+
+                const openResetModal = (uId) => {
+                    selectedUserId.value = uId;
+                    resetForm.value = { new: '', confirm: '' };
+                    resetError.value = '';
+                    showResetModal.value = true;
+                };
+
+                const doAdminResetPassword = () => {
+                    const f = resetForm.value;
+                    if (!f.new || !f.confirm) {
+                        resetError.value = "Semua kolom wajib diisi";
+                        return;
+                    }
+                    if (f.new.length < 6) {
+                        resetError.value = "Password minimal 6 karakter";
+                        return;
+                    }
+                    if (f.new !== f.confirm) {
+                        resetError.value = "Konfirmasi password tidak cocok";
+                        return;
+                    }
+                    persist('resetPassword', { user_id: selectedUserId.value, new_password: f.new, role: user.value.role });
+                    if (USE_MOCK) {
+                        const dbUser = users.value.find(u => u.id === selectedUserId.value);
+                        if (dbUser) dbUser.password = f.new;
+                    }
+                    showToast("Password user berhasil di-reset");
+                    showResetModal.value = false;
                 };
 
                 const doChangePassword = async () => {
@@ -1822,6 +1923,7 @@
                 return {
                     route, user, navigate, doLogin, doLogout, loginForm, loginError, registerForm, registerError, doRegister, showSplash, isLoading, toast,
                     showPasswordModal, passwordForm, passwordError, doChangePassword, showHelpModal, handlePhotoUpload,
+                    showResetModal, resetForm, resetError, openResetModal, doAdminResetPassword,
                     tools, filteredTools, searchQuery, jenisAlatOptions, filterJenisList, selectedJenis,
                     currentToolId, currentTool, currentSOPs, hasUnderstood,
                     quizState, currentQuizzes, currentQuestion, currentQuestionOptions, selectAnswer, nextQuestion,
