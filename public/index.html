@@ -169,9 +169,12 @@
                             <span v-if="!isLoading">Login</span>
                             <span v-else class="animate-pulse">Memuat...</span>
                         </button>
-                        <p class="text-center text-sm text-secondary mt-2">
-                            Belum memiliki akun? <button @click="navigate('/register')" class="text-brand-info font-semibold hover:underline">Buat akun baru</button>
-                        </p>
+                        <div class="flex flex-col items-center gap-2 mt-2">
+                            <button @click="showForgotModal = true" class="text-sm font-semibold text-brand-accent hover:underline">Lupa password?</button>
+                            <p class="text-center text-sm text-secondary">
+                                Belum memiliki akun? <button @click="navigate('/register')" class="text-brand-info font-semibold hover:underline">Buat akun baru</button>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -555,7 +558,7 @@
                 <!-- KELOLA PENGGUNA VIEW -->
                 <div v-else-if="route === '/kelola-pengguna' && user?.role === 'admin'" class="flex-1 flex flex-col h-screen overflow-hidden" key="kelola-pengguna">
                     <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex gap-3 items-center">
-                        <button @click="navigate('/home')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0 flex justify-center items-center">
+                        <button @click="navigate('/')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0 flex justify-center items-center">
                             <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
                         <div>
@@ -565,7 +568,7 @@
                     </div>
                     
                     <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar flex flex-col gap-4">
-                        <div v-for="u in users.filter(x => x.role !== 'admin')" :key="u.id" class="glass-card !p-4 flex flex-col gap-3">
+                        <div v-for="u in mahasiswaUsers" :key="u.id" class="glass-card !p-4 flex flex-col gap-3">
                             <div class="flex gap-4 items-center">
                                 <div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
                                     <img :src="u.photo_url || 'https://ui-avatars.com/api/?name=' + u.name + '&background=2A6055&color=fff'" class="w-full h-full object-cover">
@@ -1033,6 +1036,23 @@
                     </div>
 
                     <!-- Modals -->
+                    <div v-if="showForgotModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm">
+                            <h2 class="font-bold text-brand-info uppercase text-xs tracking-wider mb-4 text-center">Lupa Password</h2>
+                            <p class="text-xs text-secondary mb-4 text-center">Masukkan nama atau NIM Anda untuk dikirimkan ke Admin via WhatsApp.</p>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Nama Mahasiswa</label>
+                                    <input v-model="forgotName" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Contoh: Budi Santoso">
+                                </div>
+                                <div class="flex gap-3 mt-2">
+                                    <button @click="showForgotModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
+                                    <button @click="doForgotPasswordWhatsApp" class="bg-brand-success text-white flex-1 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-brand-success/90">Kirim WA</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-if="showPasswordModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
                         <div class="glass-card w-full max-w-sm">
                             <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-4 text-center">Ubah Password</h2>
@@ -1242,6 +1262,8 @@
                 // Form & UI State
                 const loginForm = ref({ email: '', password: '' });
                 const loginError = ref('');
+                const showForgotModal = ref(false);
+                const forgotName = ref('');
                 const registerForm = ref({ name: '', nim: '', email: '', password: '', confirm: '' });
                 const registerError = ref('');
                 const showPasswordModal = ref(false);
@@ -1418,6 +1440,16 @@
                     } else {
                         registerError.value = res.error || "Pendaftaran gagal";
                     }
+                };
+
+                const doForgotPasswordWhatsApp = () => {
+                    const name = forgotName.value.trim() || 'mahasiswa';
+                    const text = `hai admin, Akun ${name} tolong reset pasword, thanks`;
+                    const waNumber = "6281242826898";
+                    const link = `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`;
+                    window.open(link, '_blank');
+                    showForgotModal.value = false;
+                    forgotName.value = '';
                 };
 
                 const openResetModal = (uId) => {
@@ -1920,12 +1952,18 @@
                     });
                 });
 
+                const mahasiswaUsers = computed(() => {
+                    const arr = Array.isArray(users.value) ? users.value : [];
+                    return arr.filter(x => x.role !== 'admin');
+                });
+
                 return {
                     route, user, navigate, doLogin, doLogout, loginForm, loginError, registerForm, registerError, doRegister, showSplash, isLoading, toast,
+                    showForgotModal, forgotName, doForgotPasswordWhatsApp,
                     showPasswordModal, passwordForm, passwordError, doChangePassword, showHelpModal, handlePhotoUpload,
                     showResetModal, resetForm, resetError, openResetModal, doAdminResetPassword,
                     tools, filteredTools, searchQuery, jenisAlatOptions, filterJenisList, selectedJenis,
-                    users, currentToolId, currentTool, currentSOPs, hasUnderstood,
+                    users, mahasiswaUsers, currentToolId, currentTool, currentSOPs, hasUnderstood,
                     quizState, currentQuizzes, currentQuestion, currentQuestionOptions, selectAnswer, nextQuestion,
                     products, formatRp,
                     cart, cartItems, cartTotal, cartCount, addToCart, updateQty, removeFromCart, checkoutWhatsApp, getCartQty,
