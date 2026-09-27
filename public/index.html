@@ -1284,10 +1284,7 @@
                     if (!user.value && route.value !== '/login' && route.value !== '/register') {
                         navigate('/login');
                     } else if (newRoute.startsWith('/quiz/')) {
-                        const qId = parseInt(newRoute.split('/')[2]);
-                        if (currentToolId.value !== qId || quizQuestions.value.length === 0) {
-                            initQuiz(qId);
-                        }
+                        initQuiz(parseInt(newRoute.split('/')[2]));
                     }
                 });
 
@@ -1555,7 +1552,6 @@
 
                 const navigate = (path) => {
                     if (window.location.hash.slice(1) === path && path.startsWith('/quiz/')) {
-                        // Forcing init if navigating to same quiz hash
                         initQuiz(parseInt(path.split('/')[2]));
                     }
                     window.location.hash = path;
