@@ -583,6 +583,28 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Reset Password Modal (Dalam View Kelola Pengguna) -->
+                    <div v-if="showResetModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm">
+                            <h2 class="font-bold text-brand-info uppercase text-xs tracking-wider mb-4 text-center">Reset Password Pengguna</h2>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Password Baru</label>
+                                    <input v-model="resetForm.new" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Minimal 6 karakter">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Konfirmasi Password</label>
+                                    <input v-model="resetForm.confirm" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <p v-if="resetError" class="text-red-500 text-xs text-center font-medium">{{ resetError }}</p>
+                                <div class="flex gap-3 mt-2">
+                                    <button @click="showResetModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
+                                    <button @click="doAdminResetPassword" class="bg-brand-info text-white flex-1 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-brand-info/90">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TOKO VIEW -->
@@ -1011,28 +1033,6 @@
                     </div>
 
                     <!-- Modals -->
-                    <!-- Reset Password Modal -->
-                    <div v-if="showResetModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
-                        <div class="glass-card w-full max-w-sm">
-                            <h2 class="font-bold text-brand-info uppercase text-xs tracking-wider mb-4 text-center">Reset Password Pengguna</h2>
-                            <div class="flex flex-col gap-3">
-                                <div>
-                                    <label class="text-xs text-secondary mb-1 block">Password Baru</label>
-                                    <input v-model="resetForm.new" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Minimal 6 karakter">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-secondary mb-1 block">Konfirmasi Password</label>
-                                    <input v-model="resetForm.confirm" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
-                                </div>
-                                <p v-if="resetError" class="text-red-500 text-xs text-center font-medium">{{ resetError }}</p>
-                                <div class="flex gap-3 mt-2">
-                                    <button @click="showResetModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
-                                    <button @click="doAdminResetPassword" class="bg-brand-info text-white flex-1 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-brand-info/90">Reset</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div v-if="showPasswordModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
                         <div class="glass-card w-full max-w-sm">
                             <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-4 text-center">Ubah Password</h2>
@@ -1925,7 +1925,7 @@
                     showPasswordModal, passwordForm, passwordError, doChangePassword, showHelpModal, handlePhotoUpload,
                     showResetModal, resetForm, resetError, openResetModal, doAdminResetPassword,
                     tools, filteredTools, searchQuery, jenisAlatOptions, filterJenisList, selectedJenis,
-                    currentToolId, currentTool, currentSOPs, hasUnderstood,
+                    users, currentToolId, currentTool, currentSOPs, hasUnderstood,
                     quizState, currentQuizzes, currentQuestion, currentQuestionOptions, selectAnswer, nextQuestion,
                     products, formatRp,
                     cart, cartItems, cartTotal, cartCount, addToCart, updateQty, removeFromCart, checkoutWhatsApp, getCartQty,
