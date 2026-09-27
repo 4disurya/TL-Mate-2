@@ -612,7 +612,7 @@
 
                 <!-- TOKO VIEW -->
                 <div v-else-if="route === '/toko'" class="flex-1 flex flex-col h-screen overflow-hidden" key="toko">
-                    <div v-if="editMode !== 'product'" class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex justify-between items-center">
+                    <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex justify-between items-center">
                         <div class="flex gap-3 items-center">
                             <img src="logo-icon.png" alt="TL Mate" class="w-10 h-10 rounded-lg">
                             <div>
@@ -626,7 +626,7 @@
                         </button>
                     </div>
                     
-                    <div v-if="editMode !== 'product'" class="flex-1 overflow-y-auto p-5 pb-32 grid grid-cols-2 gap-4 content-start no-scrollbar">
+                    <div class="flex-1 overflow-y-auto p-5 pb-32 grid grid-cols-2 gap-4 content-start no-scrollbar">
                         <!-- Add Button for Admin -->
                         <div v-if="user?.role === 'admin'" class="glass-card !border-brand-info/50 !bg-brand-info/10 !p-3 flex flex-col items-center justify-center h-full cursor-pointer hover:bg-brand-info/20 transition-colors min-h-[160px]" @click="openEditProduct()">
                             <div class="w-12 h-12 rounded-full bg-brand-info text-white flex items-center justify-center font-bold text-2xl mb-2 shadow-lg">+</div>
@@ -652,9 +652,9 @@
                             <div class="text-brand-accent font-bold text-sm">{{ formatRp(product.price) }}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Floating Cart Button -->
-                    <div v-if="editMode !== 'product' && cartCount > 0 && user?.role !== 'admin'" class="absolute bottom-[100px] w-full px-5 z-20 flex justify-center pointer-events-none">
+                    <div v-if="cartCount > 0 && user?.role !== 'admin'" class="absolute bottom-[100px] w-full px-5 z-20 flex justify-center pointer-events-none">
                         <button @click="navigate('/keranjang')" class="btn-lab pointer-events-auto w-full max-w-[300px] py-3.5 px-6 flex justify-between items-center transition-transform hover:scale-105">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -665,53 +665,53 @@
                             </div>
                         </button>
                     </div>
+                </div>
 
-                    <!-- Edit Produk (Layar Baru) -->
-                    <div v-if="editMode === 'product' && user?.role === 'admin'" class="flex-1 flex flex-col h-full bg-brand-dark overflow-hidden animate-[fadeIn_0.2s_ease-out]">
-                        <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
-                            <button @click="editMode = null" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0 flex justify-center items-center">
-                                <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
-                            <h1 class="text-lg font-bold flex-1">{{ editFormData.id ? 'Edit Produk' : 'Tambah Produk Baru' }}</h1>
-                        </div>
-                        <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
-                            <div class="glass-card flex flex-col gap-4 p-5">
+                <!-- EDIT PRODUK VIEW -->
+                <div v-else-if="route === '/edit-produk' && user?.role === 'admin'" class="flex-1 flex flex-col h-screen overflow-hidden bg-brand-dark" key="edit-produk">
+                    <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <button @click="navigate('/toko')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0 flex justify-center items-center">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h1 class="text-lg font-bold flex-1">{{ editFormData.id ? 'Edit Produk' : 'Tambah Produk Baru' }}</h1>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <div class="glass-card flex flex-col gap-4 p-5">
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Nama Produk</label>
+                                <input v-model="editFormData.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="text-xs text-secondary mb-1 block">Nama Produk</label>
-                                    <input v-model="editFormData.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <label class="text-xs text-secondary mb-1 block">Harga (Rp)</label>
+                                    <input v-model.number="editFormData.price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
                                 </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="text-xs text-secondary mb-1 block">Harga (Rp)</label>
-                                        <input v-model.number="editFormData.price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-secondary mb-1 block">Sisa Stok</label>
-                                        <input v-model.number="editFormData.stock" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
-                                    </div>
-                                </div>
-                                
                                 <div>
-                                    <label class="text-xs text-secondary mb-1 block">Foto (URL / Upload)</label>
-                                    <div class="flex flex-col gap-2">
-                                        <input v-model="editFormData.img" type="text" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
-                                        <input type="file" accept="image/*" @change="handleImageUpload" class="text-xs text-secondary file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20">
-                                    </div>
-                                    <div v-if="editFormData.img" class="mt-2 w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
-                                        <img :src="editFormData.img" class="w-full h-full object-cover">
-                                    </div>
+                                    <label class="text-xs text-secondary mb-1 block">Sisa Stok</label>
+                                    <input v-model.number="editFormData.stock" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
                                 </div>
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Foto (URL / Upload)</label>
+                                <div class="flex flex-col gap-2">
+                                    <input v-model="editFormData.img" type="text" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <input type="file" accept="image/*" @change="handleImageUpload" class="text-xs text-secondary file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20">
+                                </div>
+                                <div v-if="editFormData.img" class="mt-2 w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
+                                    <img :src="editFormData.img" class="w-full h-full object-cover">
+                                </div>
+                            </div>
 
-                                <div>
-                                    <label class="text-xs text-secondary mb-1 block">Link Eksternal (Opsional)</label>
-                                    <input v-model="editFormData.link" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
-                                </div>
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Link Eksternal (Opsional)</label>
+                                <input v-model="editFormData.link" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
 
-                                <div class="flex gap-3 mt-4 pt-4 border-t border-slate-200">
-                                    <button @click="editMode = null" class="btn-lab-ghost flex-1 py-3 rounded-full text-sm font-bold">Batal</button>
-                                    <button @click="saveProduct" class="flex-1 py-3 rounded-full text-sm font-bold bg-brand-info text-slate-800 hover:bg-emerald-700">Simpan</button>
-                                </div>
+                            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-200">
+                                <button @click="navigate('/toko')" class="btn-lab-ghost flex-1 py-3 rounded-full text-sm font-bold">Batal</button>
+                                <button @click="saveProduct" class="flex-1 py-3 rounded-full text-sm font-bold bg-brand-info text-slate-800 hover:bg-emerald-700">Simpan</button>
                             </div>
                         </div>
                     </div>
@@ -1356,6 +1356,9 @@
                 // Lifecycle
                 onMounted(() => {
                     setTimeout(() => showSplash.value = false, 2500);
+                    // Warm-up ping to GAS for faster login
+                    if (!user.value) fetchData('ping').catch(() => {});
+                    
                     if (user.value && (route.value === '/login' || route.value === '/register')) navigate('/');
                     if (user.value) loadInitialData();
                 });
@@ -1561,11 +1564,8 @@
 
                 const currentTool = computed(() => tools.value.find(t => t.id === currentToolId.value));
                 const currentSOPs = computed(() => sops.value.filter(s => s.tool_id === currentToolId.value).sort((a,b) => a.id - b.id));
-                const currentQuizzes = computed(() => {
-                    // Random 5 questions for MVP
-                    const toolQuizzes = quizzes.value.filter(q => q.tool_id === currentToolId.value);
-                    return toolQuizzes.sort(() => 0.5 - Math.random()).slice(0, 5);
-                });
+                const quizQuestions = ref([]);
+                const currentQuizzes = computed(() => quizQuestions.value);
 
                 // Dashboard Search & Filter
                 const filteredTools = computed(() => {
@@ -1581,7 +1581,81 @@
                 });
 
                 // Quiz Logic
+                const generateQuizBank = (tool) => {
+                    if (!tool) return [];
+                    const bank = [];
+                    const otherTools = tools.value.filter(t => t.id !== tool.id);
+                    
+                    // 1. Function question
+                    if (tool.function) {
+                        const distractors = otherTools.map(t => t.function).filter(x => x).sort(() => 0.5 - Math.random());
+                        bank.push({ q: `Apa fungsi utama dari ${tool.name}?`, a: tool.function, bad: distractors });
+                    }
+                    
+                    // 2. Desc question
+                    if (tool.desc) {
+                        const distractors = otherTools.map(t => t.desc).filter(x => x).sort(() => 0.5 - Math.random());
+                        bank.push({ q: `Apa yang dimaksud dengan ${tool.name}?`, a: tool.desc, bad: distractors });
+                    }
+
+                    // 3. Parts questions
+                    if (tool.parts && tool.parts.length > 0) {
+                        tool.parts.forEach(p => {
+                            if (p.desc) {
+                                const badDescs = tool.parts.filter(x => x.name !== p.name).map(x => x.desc).sort(() => 0.5 - Math.random());
+                                bank.push({ q: `Apa fungsi dari bagian ${p.name} pada ${tool.name}?`, a: p.desc, bad: badDescs });
+                            }
+                            const badNames = tool.parts.filter(x => x.name !== p.name).map(x => x.name).sort(() => 0.5 - Math.random());
+                            bank.push({ q: `Bagian pada ${tool.name} yang berfungsi untuk ${p.desc.toLowerCase().replace(/\.$/, '')} disebut?`, a: p.name, bad: badNames });
+                        });
+                    }
+
+                    // 4. SOP questions
+                    const toolSops = sops.value.filter(s => s.tool_id === tool.id).sort((a,b) => a.id - b.id);
+                    if (toolSops.length > 1) {
+                        for (let i = 0; i < toolSops.length - 1; i++) {
+                            const current = toolSops[i].step_title;
+                            const next = toolSops[i+1].step_title;
+                            const badNext = toolSops.filter(x => x.step_title !== next && x.step_title !== current).map(x => x.step_title).sort(() => 0.5 - Math.random());
+                            bank.push({ q: `Dalam SOP ${tool.name}, langkah apa yang dilakukan setelah "${current}"?`, a: next, bad: badNext });
+                        }
+                    }
+                    
+                    // Fallback generic if bank too small
+                    while(bank.length < 5) {
+                        bank.push({ q: `Apakah Anda sudah membaca SOP ${tool.name}?`, a: "Sudah", bad: ["Belum", "Mungkin", "Tidak tahu"] });
+                    }
+                    return bank;
+                };
+
                 const initQuiz = (toolId) => {
+                    const tool = tools.value.find(t => t.id == toolId);
+                    const bank = generateQuizBank(tool).sort(() => 0.5 - Math.random()).slice(0, 5);
+                    
+                    quizQuestions.value = bank.map((item, idx) => {
+                        let opts = [item.a];
+                        // Add up to 3 distractors
+                        for(const b of item.bad) {
+                            if(opts.length < 4 && !opts.includes(b)) opts.push(b);
+                        }
+                        // Fill generic if needed
+                        const filler = ["Semua benar", "Semua salah", "Tidak ada jawaban", "Bergantung kondisi"];
+                        let fIdx = 0;
+                        while(opts.length < 4) {
+                            if(!opts.includes(filler[fIdx])) opts.push(filler[fIdx]);
+                            fIdx++;
+                        }
+                        opts = opts.sort(() => 0.5 - Math.random());
+                        const answerLetter = ['A', 'B', 'C', 'D'][opts.indexOf(item.a)];
+                        return {
+                            id: idx + 1,
+                            tool_id: toolId,
+                            question: item.q,
+                            opt_a: opts[0], opt_b: opts[1], opt_c: opts[2], opt_d: opts[3],
+                            answer: answerLetter
+                        };
+                    });
+
                     quizState.value = {
                         currentIndex: 0,
                         score: 0,
@@ -1657,6 +1731,7 @@
                     } else {
                         editFormData.value = { name: '', price: 0, stock: 0, img: '', link: '' };
                     }
+                    navigate('/toko-edit');
                 };
 
                 const saveProduct = () => {
@@ -1677,6 +1752,7 @@
                     }
                     if (finalProduct) persist('saveProduct', finalProduct);
                     editMode.value = null;
+                    navigate('/toko');
                 };
 
                 const deleteProduct = (id) => {
