@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TL Mate</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#FFFFFF',
+                            light: '#EFF4EC',
+                            accent: '#2A6055',
+                            info: '#EFA93C',
+                            success: '#2E7D6B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F4F7F1; /* Fallback */
+            color: #0F172A;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Mobile Container Simulation */
+        #app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #FFFFFF 0%, #EFF4EC 100%);
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .glass-nav {
+            background: rgba(42, 96, 85, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid #2A6055;
+        }
+
+        .text-secondary { color: #6E7F79; }
+        
+        /* Lab-Tech Buttons */
+        .btn-lab {
+            background: linear-gradient(135deg, #F6C567 0%, #EBA336 100%);
+            color: #FFFFFF !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 20px rgba(239, 169, 60, 0.25);
+            transition: all 0.2s ease;
+            border-radius: 4px; /* fallback behind clip */
+        }
+        .btn-lab:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 12px 25px rgba(239, 169, 60, 0.35);
+        }
+        .btn-lab:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .btn-lab:disabled {
+            background: #E2E8F0;
+            color: #94A3B8 !important;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-lab-ghost {
+            background: transparent;
+            color: #EFA93C !important;
+            border: 2px solid rgba(239, 169, 60, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+            transition: all 0.2s ease;
+        }
+        .btn-lab-ghost:hover {
+            border-color: #EFA93C;
+            background: rgba(239, 169, 60, 0.05);
+        }
+
+        .chip-lab {
+            clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+            border-radius: 2px;
+        }
+
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.2s ease;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="app-container">
+            
+            <!-- Splash Screen -->
+            <transition name="fade">
+                <div v-if="showSplash" class="fixed inset-0 z-[100] bg-[#F4F7F1] flex flex-col items-center justify-center">
+                    <img src="logo-full.png" alt="TL Mate Splash" class="w-56 max-w-[70%] animate-pulse" />
+                </div>
+            </transition>
+
+            <!-- Toast Notification -->
+            <transition name="fade">
+                <div v-if="toast.show" class="fixed top-12 left-1/2 transform -translate-x-1/2 z-50 bg-brand-success text-brand-dark px-6 py-3 rounded-full font-bold shadow-lg w-[80%] text-center max-w-[350px]">
+                    {{ toast.message }}
+                </div>
+            </transition>
+
+            <!-- Content Area -->
+            <transition name="fade" mode="out-in">
+                <!-- LOGIN VIEW -->
+                <div v-if="route === '/login'" class="flex-1 flex flex-col justify-center px-6 py-12 overflow-y-auto no-scrollbar" key="login">
+                    <div class="text-center mb-8 flex flex-col items-center">
+                        <img src="logo-full.png" alt="TL Mate Logo" class="w-48 mb-2">
+                    </div>
+                    <div class="glass-card flex flex-col gap-5 p-6">
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Email</label>
+                            <input type="email" v-model="loginForm.email" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-2 focus:outline-none focus:border-brand-info transition-colors" placeholder="mahasiswa@poltekkes.ac.id" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Password</label>
+                            <input type="password" v-model="loginForm.password" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-2 focus:outline-none focus:border-brand-info transition-colors" placeholder="••••••••" />
+                        </div>
+                        <p v-if="loginError" class="text-red-400 text-sm font-medium">{{ loginError }}</p>
+                        <button @click="doLogin" class="btn-lab mt-2 w-full flex justify-center items-center h-[44px]">
+                            <span v-if="!isLoading">Login</span>
+                            <span v-else class="animate-pulse">Memuat...</span>
+                        </button>
+                        <p class="text-center text-sm text-secondary mt-2">
+                            Belum memiliki akun? <button @click="navigate('/register')" class="text-brand-info font-semibold hover:underline">Buat akun baru</button>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- REGISTER VIEW -->
+                <div v-else-if="route === '/register'" class="flex-1 flex flex-col justify-center px-6 py-12 overflow-y-auto no-scrollbar" key="register">
+                    <div class="text-center mb-6 flex flex-col items-center">
+                        <img src="logo-icon.png" alt="TL Mate Logo" class="w-16 mb-4">
+                        <h1 class="text-2xl font-bold text-slate-800">Daftar Akun</h1>
+                    </div>
+                    <div class="glass-card flex flex-col gap-4 p-6">
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Nama Lengkap</label>
+                            <input type="text" v-model="registerForm.name" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-1.5 focus:outline-none focus:border-brand-info transition-colors" placeholder="Nama Anda" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Nomor NIM</label>
+                            <input type="text" v-model="registerForm.nim" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-1.5 focus:outline-none focus:border-brand-info transition-colors" placeholder="NIM" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Email</label>
+                            <input type="email" v-model="registerForm.email" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-1.5 focus:outline-none focus:border-brand-info transition-colors" placeholder="email@contoh.com" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Password</label>
+                            <input type="password" v-model="registerForm.password" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-1.5 focus:outline-none focus:border-brand-info transition-colors" placeholder="Minimal 6 karakter" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-secondary uppercase font-semibold tracking-wider">Konfirmasi Password</label>
+                            <input type="password" v-model="registerForm.confirm" class="w-full bg-transparent border-b border-slate-300 text-slate-800 py-1.5 focus:outline-none focus:border-brand-info transition-colors" placeholder="Ketik ulang password" />
+                        </div>
+                        <p v-if="registerError" class="text-red-400 text-sm font-medium">{{ registerError }}</p>
+                        <button @click="doRegister" class="btn-lab mt-2 w-full flex justify-center items-center h-[44px]">
+                            <span v-if="!isLoading">Daftar</span>
+                            <span v-else class="animate-pulse">Memuat...</span>
+                        </button>
+                        <p class="text-center text-sm text-secondary mt-2">
+                            Sudah punya akun? <button @click="navigate('/login')" class="text-brand-info font-semibold hover:underline">Login</button>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD VIEW -->
+                <div v-else-if="route === '/'" class="flex-1 flex flex-col pb-24 h-screen overflow-y-auto no-scrollbar" key="dashboard">
+                    <div class="p-5 pt-14 flex justify-between items-center sticky top-0 bg-brand-dark/50 backdrop-blur-md z-10 border-b border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2">
+                                <img src="logo-icon.png" alt="TL Mate" class="w-8 h-8 rounded-lg">
+                                <div>
+                                    <h1 class="text-2xl font-bold text-slate-800 leading-none">TL Mate</h1>
+                                    <p class="text-secondary text-sm mt-0.5">Hai, {{ user?.name }}</p>
+                                </div>
+                            </div>
+                            <button v-if="user?.role === 'admin'" @click="navigate('/kelola-katalog')" class="ml-2 bg-brand-accent/10 text-brand-accent border border-brand-accent/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-brand-accent/20 transition-colors">
+                                Kelola Alat
+                            </button>
+                        </div>
+                        <div class="w-12 h-12 rounded-full border-2 border-brand-info overflow-hidden cursor-pointer" @click="navigate('/profile')">
+                            <img :src="user?.photo_url" alt="Avatar" class="w-full h-full object-cover"/>
+                        </div>
+                    </div>
+
+                    <div class="px-5 mt-6">
+                        <div class="flex justify-between items-end mb-4">
+                            <h2 class="text-xl font-semibold">Katalog Alat Lab</h2>
+                        </div>
+                        
+                        <div class="relative mb-4">
+                            <svg class="absolute left-4 top-3.5 w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" v-model="searchQuery" placeholder="Cari alat..." class="w-full bg-slate-100 border border-slate-200 rounded-full py-3 pl-11 pr-4 text-slate-800 focus:outline-none focus:border-brand-info placeholder-secondary" />
+                        </div>
+
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 mb-6">
+                            <button v-for="j in filterJenisList" :key="j" @click="selectedJenis = j"
+                                class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors"
+                                :class="selectedJenis === j ? 'bg-brand-accent text-white border-brand-accent' : 'bg-transparent text-secondary border-slate-200 hover:border-slate-300'">
+                                {{ j }}
+                            </button>
+                        </div>
+
+                        <div class="flex flex-col gap-4">
+                            <div v-if="filteredTools.length === 0" class="text-center py-8 text-secondary">
+                                Alat tidak ditemukan.
+                            </div>
+                            <div v-for="tool in filteredTools" :key="tool.id" @click="navigate('/tool/' + tool.id)" class="glass-card !p-3 flex items-center cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div class="w-20 h-20 rounded-[20px] overflow-hidden mr-4 flex-shrink-0 bg-slate-100">
+                                    <img :src="tool.img" alt="Tool" class="w-full h-full object-cover" />
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-slate-800 text-base leading-tight mb-1">{{ tool.name }}</h3>
+                                    <p class="text-secondary text-xs line-clamp-2 leading-relaxed">{{ tool.desc }}</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KELOLA KATALOG VIEW (Admin) -->
+                <div v-else-if="route === '/kelola-katalog' && user?.role === 'admin'" class="flex-1 flex flex-col h-screen overflow-hidden" key="kelola-katalog">
+                    <div class="p-4 pt-12 flex justify-between items-center bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <button @click="navigate('/')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0">
+                                <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <h1 class="text-lg font-bold">Kelola Katalog</h1>
+                        </div>
+                        <button v-if="!editMode" @click="openEditTool()" class="chip-lab bg-brand-success text-white px-4 py-1.5 text-xs font-bold shadow-lg shadow-brand-success/20">
+                            + Tambah Alat
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <!-- List Mode -->
+                        <div v-if="!editMode" class="flex flex-col gap-4">
+                            <div v-for="tool in tools" :key="tool.id" class="glass-card !p-3 flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                                    <img :src="tool.img" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-bold text-sm truncate mb-1">{{ tool.name }}</h3>
+                                    <p class="text-xs text-secondary truncate">{{ tool.function }}</p>
+                                </div>
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <button @click="openEditTool(tool)" class="w-8 h-8 rounded bg-brand-info/20 text-brand-info flex items-center justify-center hover:bg-brand-info/40">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                    <button @click="deleteTool(tool.id)" class="w-8 h-8 rounded bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Form Mode -->
+                        <div v-else class="glass-card flex flex-col gap-4 p-5">
+                            <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-2">{{ editFormData.id ? 'Edit Alat' : 'Tambah Alat Baru' }}</h2>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Nama Alat</label>
+                                <input v-model="editFormData.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Jenis Alat</label>
+                                <select v-model="editFormData.jenis" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <option value="">— Pilih Jenis Alat —</option>
+                                    <option v-for="j in jenisAlatOptions" :key="j" :value="j">{{ j }}</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Foto (URL / Upload)</label>
+                                <div class="flex flex-col gap-2">
+                                    <input v-model="editFormData.img" type="text" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <input type="file" accept="image/*" @change="handleImageUpload" class="text-xs text-secondary file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20">
+                                </div>
+                                <div v-if="editFormData.img" class="mt-2 w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
+                                    <img :src="editFormData.img" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Fungsi Utama</label>
+                                <textarea v-model="editFormData.function" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Deskripsi Singkat</label>
+                                <textarea v-model="editFormData.desc" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Video YouTube (Embed URL)</label>
+                                <input v-model="editFormData.video_url" type="text" placeholder="Opsional" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <hr class="border-slate-200 my-2">
+                            
+                            <!-- Parts Editor -->
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-bold">Bagian-Bagian Penting</h3>
+                                    <button @click="editPartsList.push({ name: '', desc: '' })" class="btn-lab-ghost text-[10px] px-2 py-1 rounded">+ Bagian</button>
+                                </div>
+                                <div class="flex flex-col gap-3">
+                                    <div v-for="(part, index) in editPartsList" :key="index" class="p-3 border border-slate-200 rounded-xl bg-slate-50 relative">
+                                        <button @click="editPartsList.splice(index, 1)" class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold shadow-lg">×</button>
+                                        <div class="mb-2">
+                                            <input v-model="part.name" type="text" placeholder="Nama Bagian..." class="w-full bg-transparent border-b border-slate-300 text-sm focus:border-brand-info outline-none pb-1 font-semibold text-brand-accent">
+                                        </div>
+                                        <textarea v-model="part.desc" rows="2" placeholder="Keterangan..." class="w-full bg-transparent border-b border-slate-300 text-xs focus:border-brand-info outline-none pb-1 text-secondary"></textarea>
+                                    </div>
+                                    <div v-if="editPartsList.length === 0" class="text-center text-xs text-secondary">Belum ada bagian.</div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-200 my-2">
+                            
+                            <!-- SOP Editor -->
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-sm font-bold">Langkah SOP</h3>
+                                    <button @click="editSOPsList.push({ step_title: '', content: '' })" class="btn-lab-ghost text-[10px] px-2 py-1 rounded">+ Langkah</button>
+                                </div>
+                                <div class="flex flex-col gap-3">
+                                    <div v-for="(sop, index) in editSOPsList" :key="index" class="p-3 border border-slate-200 rounded-xl bg-slate-50 relative">
+                                        <button @click="editSOPsList.splice(index, 1)" class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold shadow-lg">×</button>
+                                        <div class="mb-2">
+                                            <input v-model="sop.step_title" type="text" :placeholder="'Langkah ' + (index+1)" class="w-full bg-transparent border-b border-slate-300 text-sm focus:border-brand-info outline-none pb-1 font-semibold text-brand-accent">
+                                        </div>
+                                        <textarea v-model="sop.content" rows="2" placeholder="Detail langkah..." class="w-full bg-transparent border-b border-slate-300 text-xs focus:border-brand-info outline-none pb-1 text-secondary"></textarea>
+                                    </div>
+                                    <div v-if="editSOPsList.length === 0" class="text-center text-xs text-secondary">Belum ada SOP.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-200">
+                                <button @click="editMode = null" class="btn-lab-ghost flex-1 py-3 rounded-full text-sm font-bold">Batal</button>
+                                <button @click="saveTool" class="flex-1 py-3 rounded-full text-sm font-bold bg-brand-info text-slate-800 hover:bg-emerald-700">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOOL DETAIL VIEW -->
+                <div v-else-if="route.startsWith('/tool/') && !route.endsWith('/sop')" class="flex-1 flex flex-col h-screen overflow-hidden" key="tool">
+                    <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <button @click="navigate('/')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] min-h-[40px] flex-shrink-0">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h1 class="text-lg font-bold flex-1 truncate">{{ currentTool?.name }}</h1>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <div class="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 mb-6 shadow-lg border border-slate-200">
+                            <img :src="currentTool?.img" class="w-full h-full object-cover" />
+                        </div>
+
+                        <div class="mb-6">
+                            <h2 class="text-sm text-brand-accent font-semibold uppercase tracking-wider mb-2">Fungsi Utama</h2>
+                            <p class="text-slate-800/90 text-sm leading-relaxed">{{ currentTool?.function }}</p>
+                        </div>
+                        
+                        <div v-if="currentTool?.parts?.length" class="mb-6">
+                            <h2 class="text-sm text-brand-accent font-semibold uppercase tracking-wider mb-3">Bagian-Bagian Penting</h2>
+                            <div class="flex flex-col gap-2">
+                                <div v-for="(part, index) in currentTool.parts" :key="index" class="glass-card !p-3 flex items-start gap-3">
+                                    <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-info shrink-0"></div>
+                                    <div>
+                                        <h3 class="font-bold text-[13px] text-slate-800">{{ part.name }}</h3>
+                                        <p class="text-[12px] text-secondary leading-relaxed mt-0.5">{{ part.desc }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h2 class="text-sm text-brand-accent font-semibold uppercase tracking-wider mb-3">Video Tutorial</h2>
+                            <div v-if="ytEmbed(currentTool?.video_url)" class="w-full aspect-video rounded-2xl overflow-hidden glass-card !p-1 shadow-lg">
+                                <iframe class="w-full h-full rounded-xl" :src="ytEmbed(currentTool?.video_url)" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                            <div v-else class="glass-card !p-5 flex flex-col items-center justify-center text-center gap-3">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                                <p class="text-xs text-secondary">Video tutorial belum tersedia.</p>
+                            </div>
+                        </div>
+
+                        <button @click="navigate('/tool/' + currentTool.id + '/sop')" class="btn-lab-ghost w-full py-4 mt-2 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Buka SOP Pengoperasian
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SOP VIEW -->
+                <div v-else-if="route.startsWith('/tool/') && route.endsWith('/sop')" class="flex-1 flex flex-col h-screen" key="sop">
+                    <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <button @click="navigate('/tool/' + currentToolId)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-[10px] text-brand-accent font-semibold uppercase tracking-wider mb-0.5">SOP Pengoperasian</p>
+                            <h1 class="text-base font-bold truncate">{{ currentTool?.name }}</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <div class="flex flex-col gap-3 mb-6">
+                            <div v-for="(sop, index) in currentSOPs" :key="sop.id" class="glass-card !p-4 border-l-4 border-l-brand-info !rounded-xl">
+                                <h3 class="font-bold text-sm text-slate-800 mb-1">Langkah {{ index + 1 }}: {{ sop.step_title }}</h3>
+                                <p class="text-sm text-secondary leading-relaxed">{{ sop.content }}</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card !bg-brand-info/10 !border-brand-info/30 mb-6 flex items-start gap-3 !p-4 cursor-pointer" @click="hasUnderstood = !hasUnderstood">
+                            <div class="pt-0.5">
+                                <div class="w-5 h-5 rounded border-2 border-brand-info flex items-center justify-center transition-colors" :class="hasUnderstood ? 'bg-brand-info' : ''">
+                                    <svg v-if="hasUnderstood" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                            <p class="text-sm font-medium text-slate-800 select-none">Saya sudah membaca dan memahami Standar Operasional Prosedur (SOP) alat ini.</p>
+                        </div>
+
+                        <button :disabled="!hasUnderstood" @click="navigate('/quiz/' + currentTool.id)" class="btn-lab w-full py-4 mt-2">
+                            Mulai Kuis Evaluasi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- QUIZ VIEW -->
+                <div v-else-if="route.startsWith('/quiz/')" class="flex-1 flex flex-col h-screen" key="quiz">
+                    <div class="p-4 pt-12 border-b border-slate-200 flex items-center gap-4 bg-brand-dark/50 backdrop-blur-md">
+                        <button @click="navigate('/tool/' + currentToolId)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] min-h-[40px] flex-shrink-0">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-[10px] text-brand-accent font-semibold uppercase tracking-wider mb-0.5">Kuis Evaluasi</p>
+                            <h1 class="text-base font-bold truncate">{{ currentTool?.name }}</h1>
+                        </div>
+                        <div class="text-sm font-bold font-mono bg-slate-100 px-2 py-1 rounded-md flex-shrink-0">
+                            {{ quizState.currentIndex + 1 }}/{{ currentQuizzes.length }}
+                        </div>
+                    </div>
+
+                    <div v-if="!quizState.finished" class="flex-1 p-5 overflow-y-auto flex flex-col">
+                        <div class="flex-1">
+                            <div class="glass-card !p-6 mb-6 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-brand-info"></div>
+                                <h2 class="text-lg font-semibold leading-relaxed">{{ currentQuestion?.question }}</h2>
+                            </div>
+                            
+                            <div class="flex flex-col gap-3">
+                                <button v-for="(opt, key) in currentQuestionOptions" :key="key" 
+                                        @click="selectAnswer(key)"
+                                        class="glass-card !p-4 text-left font-medium flex items-center gap-3 transition-all min-h-[44px]"
+                                        :class="quizState.selectedAnswer === key ? '!bg-brand-info/20 !border-brand-info text-slate-800' : 'hover:bg-slate-50'">
+                                    <div class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold text-sm shrink-0"
+                                         :class="quizState.selectedAnswer === key ? 'bg-brand-info border-brand-info' : ''">
+                                        {{ key }}
+                                    </div>
+                                    <span class="flex-1 text-[15px]">{{ opt }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button :disabled="!quizState.selectedAnswer" @click="nextQuestion" class="btn-lab w-full py-4 mt-6">
+                            {{ quizState.currentIndex === currentQuizzes.length - 1 ? 'Selesai & Lihat Skor' : 'Pertanyaan Selanjutnya' }}
+                        </button>
+                    </div>
+
+                    <div v-else class="flex-1 p-5 flex flex-col items-center justify-center text-center">
+                        <div class="w-32 h-32 rounded-full flex items-center justify-center mb-6 relative"
+                             :class="quizState.score >= 80 ? 'bg-brand-success/20 text-brand-success' : 'bg-red-500/20 text-red-400'">
+                            <svg class="absolute w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="4" stroke-opacity="0.2"/>
+                                <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="4" :stroke-dasharray="301" :stroke-dashoffset="301 - (301 * quizState.score / 100)" stroke-linecap="round" class="transition-all duration-1000"/>
+                            </svg>
+                            <span class="text-4xl font-bold">{{ quizState.score }}</span>
+                        </div>
+                        
+                        <h2 class="text-2xl font-bold mb-2">{{ quizState.score >= 80 ? 'Luar Biasa!' : 'Perlu Belajar Lagi' }}</h2>
+                        <p class="text-secondary mb-8 max-w-xs mx-auto">
+                            {{ quizState.score >= 80 ? 'Anda telah memahami SOP pengoperasian alat ini dengan baik.' : 'Silakan baca kembali SOP dan coba lagi untuk mendapatkan skor minimal 80.' }}
+                        </p>
+                        
+                        <button @click="navigate('/')" class="btn-lab-ghost w-full py-4">
+                            Kembali ke Beranda
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TOKO VIEW -->
+                <div v-else-if="route === '/toko'" class="flex-1 flex flex-col h-screen overflow-hidden" key="toko">
+                    <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex justify-between items-center">
+                        <div class="flex gap-3 items-center">
+                            <img src="logo-icon.png" alt="TL Mate" class="w-10 h-10 rounded-lg">
+                            <div>
+                                <h1 class="text-2xl font-bold flex items-center gap-2 leading-none">Toko Reagen</h1>
+                                <p class="text-secondary text-sm mt-0.5">Penuhi kebutuhan logistik lab</p>
+                            </div>
+                        </div>
+                        <button @click="navigate('/toko/transaksi')" class="btn-lab-ghost px-3 py-1.5 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                            Riwayat
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-32 grid grid-cols-2 gap-4 content-start no-scrollbar">
+                        <!-- Add Button for Admin -->
+                        <div v-if="user?.role === 'admin'" class="glass-card !border-brand-info/50 !bg-brand-info/10 !p-3 flex flex-col items-center justify-center h-full cursor-pointer hover:bg-brand-info/20 transition-colors min-h-[160px]" @click="openEditProduct()">
+                            <div class="w-12 h-12 rounded-full bg-brand-info text-white flex items-center justify-center font-bold text-2xl mb-2 shadow-lg">+</div>
+                            <span class="font-bold text-sm text-brand-info text-center">Tambah Produk</span>
+                        </div>
+                        
+                        <div v-for="product in products" :key="product.id" class="glass-card !p-3 flex flex-col h-full cursor-pointer hover:bg-slate-50 transition-colors relative" @click="user?.role === 'admin' ? openEditProduct(product) : addToCart(product)">
+                            <div v-if="getCartQty(product.id) > 0 && user?.role !== 'admin'" class="absolute -top-2 -right-2 bg-brand-info text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs z-10 shadow-lg border-2 border-white">
+                                {{ getCartQty(product.id) }}
+                            </div>
+                            
+                            <button v-if="user?.role === 'admin'" @click.stop="deleteProduct(product.id)" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center z-10 shadow-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+
+                            <div class="w-full aspect-square rounded-xl overflow-hidden bg-slate-100 mb-3 relative">
+                                <img :src="product.img" class="w-full h-full object-cover" />
+                                <div class="absolute top-2 left-2 bg-slate-800/80 text-white backdrop-blur-sm text-[10px] font-bold px-2 py-1 rounded">
+                                    Stok: {{ product.stock }}
+                                </div>
+                            </div>
+                            <h3 class="font-semibold text-sm leading-tight flex-1 mb-2">{{ product.name }}</h3>
+                            <div class="text-brand-accent font-bold text-sm">{{ formatRp(product.price) }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Cart Button -->
+                    <div v-if="cartCount > 0 && user?.role !== 'admin'" class="absolute bottom-[100px] w-full px-5 z-20 flex justify-center pointer-events-none">
+                        <button @click="navigate('/keranjang')" class="btn-lab pointer-events-auto w-full max-w-[300px] py-3.5 px-6 flex justify-between items-center transition-transform hover:scale-105">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                <span>Lihat Keranjang</span>
+                            </div>
+                            <div class="bg-white text-brand-info px-2.5 py-0.5 rounded-full text-xs">
+                                {{ cartCount }} Item
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Modal Edit Produk (Admin) -->
+                    <div v-if="editMode === 'product' && user?.role === 'admin'" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm flex flex-col gap-4 p-5 max-h-[90vh] overflow-y-auto no-scrollbar relative animate-[fadeIn_0.2s_ease-out]">
+                            <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-2">{{ editFormData.id ? 'Edit Produk' : 'Tambah Produk Baru' }}</h2>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Nama Produk</label>
+                                <input v-model="editFormData.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Harga (Rp)</label>
+                                    <input v-model.number="editFormData.price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Sisa Stok</label>
+                                    <input v-model.number="editFormData.stock" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Foto (URL / Upload)</label>
+                                <div class="flex flex-col gap-2">
+                                    <input v-model="editFormData.img" type="text" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <input type="file" accept="image/*" @change="handleImageUpload" class="text-xs text-secondary file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20">
+                                </div>
+                                <div v-if="editFormData.img" class="mt-2 w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
+                                    <img :src="editFormData.img" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Link Eksternal (Opsional)</label>
+                                <input v-model="editFormData.link" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-200">
+                                <button @click="editMode = null" class="btn-lab-ghost flex-1 py-3 rounded-full text-sm font-bold">Batal</button>
+                                <button @click="saveProduct" class="flex-1 py-3 rounded-full text-sm font-bold bg-brand-info text-slate-800 hover:bg-emerald-700">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KERANJANG VIEW -->
+                <div v-else-if="route === '/keranjang'" class="flex-1 flex flex-col h-screen overflow-hidden" key="keranjang">
+                    <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <button @click="navigate('/toko')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] min-h-[40px]">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h1 class="text-lg font-bold flex-1">Keranjang Belanja</h1>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-32 flex flex-col gap-4 no-scrollbar">
+                        <div v-if="cartItems.length === 0" class="text-center py-10 text-secondary flex flex-col items-center">
+                            <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            Keranjang Anda kosong.
+                            <button @click="navigate('/toko')" class="btn-lab-ghost mt-4 px-6 py-2">Belanja Sekarang</button>
+                        </div>
+                        
+                        <div v-for="item in cartItems" :key="item.id" class="glass-card !p-3 flex items-center gap-4">
+                            <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                                <img :src="item.img" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="flex-1 flex flex-col">
+                                <div class="flex justify-between items-start gap-2 mb-1">
+                                    <h3 class="font-semibold text-sm leading-tight">{{ item.name }}</h3>
+                                    <button @click="removeFromCart(item.id)" class="text-red-400 p-1 hover:bg-red-400/20 rounded">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                                <div class="text-brand-accent font-bold text-sm mb-2">{{ formatRp(item.price) }}</div>
+                                <div class="flex items-center gap-3">
+                                    <button @click="updateQty(item.id, -1)" class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 transition-colors">−</button>
+                                    <span class="font-semibold text-[15px] w-4 text-center">{{ item.qty }}</span>
+                                    <button @click="updateQty(item.id, 1)" class="w-7 h-7 rounded-full bg-brand-info flex items-center justify-center font-bold text-white hover:bg-emerald-700 transition-colors" :class="item.qty >= item.stock ? 'opacity-50 cursor-not-allowed' : ''">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="cartItems.length > 0" class="absolute bottom-0 w-full glass-nav px-5 py-4 pb-8 flex flex-col gap-3 rounded-t-[24px] border-t border-slate-200">
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-sm text-secondary font-medium">Total Belanja</span>
+                            <span class="text-xl font-bold text-brand-success">{{ formatRp(cartTotal) }}</span>
+                        </div>
+                        <button @click="checkoutWhatsApp" class="btn-lab w-full py-3.5 flex justify-center items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                            Lanjut Transaksi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KELOLA TOKO VIEW (Admin) -->
+                <div v-else-if="route === '/toko/kelola' && user?.role === 'admin'" class="flex-1 flex flex-col h-screen overflow-hidden" key="kelola-toko">
+                    <div class="p-4 pt-12 flex justify-between items-center bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <button @click="navigate('/toko')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] flex-shrink-0">
+                                <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <h1 class="text-lg font-bold">Kelola Produk</h1>
+                        </div>
+                        <button v-if="!editMode" @click="openEditProduct()" class="chip-lab bg-brand-success text-white px-4 py-1.5 text-xs font-bold shadow-lg shadow-brand-success/20">
+                            + Tambah Produk
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <!-- List Mode -->
+                        <div v-if="!editMode" class="flex flex-col gap-4">
+                            <div v-for="prod in products" :key="prod.id" class="glass-card !p-3 flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                                    <img :src="prod.img" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-bold text-sm truncate mb-1">{{ prod.name }}</h3>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="font-bold text-brand-accent">{{ formatRp(prod.price) }}</span>
+                                        <span class="text-secondary text-[10px] bg-slate-100 px-2 py-0.5 rounded">Stok: {{ prod.stock }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <button @click="openEditProduct(prod)" class="w-8 h-8 rounded bg-brand-info/20 text-brand-info flex items-center justify-center hover:bg-brand-info/40">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                    <button @click="deleteProduct(prod.id)" class="w-8 h-8 rounded bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Form Mode -->
+                        <div v-else class="glass-card flex flex-col gap-4 p-5">
+                            <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-2">{{ editFormData.id ? 'Edit Produk' : 'Tambah Produk Baru' }}</h2>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Nama Produk</label>
+                                <input v-model="editFormData.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Harga (Rp)</label>
+                                    <input v-model.number="editFormData.price" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Stok</label>
+                                    <input v-model.number="editFormData.stock" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Foto (URL / Upload)</label>
+                                <div class="flex flex-col gap-2">
+                                    <input v-model="editFormData.img" type="text" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                    <input type="file" accept="image/*" @change="handleImageUpload" class="text-xs text-secondary file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20">
+                                </div>
+                                <div v-if="editFormData.img" class="mt-2 w-24 h-24 rounded-lg overflow-hidden bg-slate-100">
+                                    <img :src="editFormData.img" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-secondary mb-1 block">Link Eksternal (WA / Marketplace)</label>
+                                <input v-model="editFormData.link" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                            </div>
+
+                            <div class="flex gap-3 mt-4 pt-4 border-t border-slate-200">
+                                <button @click="editMode = null" class="btn-lab-ghost flex-1 py-3 rounded-full text-sm font-bold">Batal</button>
+                                <button @click="saveProduct" class="flex-1 py-3 rounded-full text-sm font-bold bg-brand-info text-slate-800 hover:bg-emerald-700">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIWAYAT TRANSAKSI VIEW -->
+                <div v-else-if="route === '/toko/transaksi'" class="flex-1 flex flex-col h-screen overflow-hidden" key="transaksi">
+                    <div class="p-4 pt-12 flex items-center gap-4 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200">
+                        <button @click="navigate('/toko')" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 min-w-[40px] min-h-[40px]">
+                            <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h1 class="text-lg font-bold flex-1">Riwayat Transaksi</h1>
+                    </div>
+                    
+                    <div class="p-4 border-b border-slate-200 flex gap-2 overflow-x-auto no-scrollbar">
+                        <button v-for="filter in ['Semua', 'Pending', 'Disetujui', 'Dikirim', 'Selesai', 'Dibatalkan']" :key="filter"
+                                @click="selectedTxFilter = filter"
+                                class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors"
+                                :class="selectedTxFilter === filter ? 'bg-brand-accent text-white border-brand-accent' : 'bg-transparent text-secondary border-slate-200 hover:border-slate-300'">
+                            {{ filter }}
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-5 pb-10 flex flex-col gap-4 no-scrollbar">
+                        <div v-if="filteredTransactions.length === 0" class="text-center py-10 text-secondary">
+                            Belum ada riwayat transaksi.
+                        </div>
+                        
+                        <div v-for="tx in filteredTransactions" :key="tx.id" class="glass-card flex flex-col overflow-hidden transition-all duration-300">
+                            <!-- Card Header (Clickable) -->
+                            <div class="p-4 cursor-pointer" @click="toggleExpandTx(tx.id)">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div class="font-mono text-xs text-brand-accent">{{ tx.id }}</div>
+                                        <div class="text-xs text-secondary">{{ tx.date }}</div>
+                                    </div>
+                                    <div class="px-2 py-1 rounded text-[10px] font-bold border" :class="getStatusColor(tx.status)">
+                                        {{ getStatusLabel(tx.status) }}
+                                    </div>
+                                </div>
+                                <div v-if="user?.role === 'admin'" class="text-xs mb-2">
+                                    <span class="text-secondary">Pembeli:</span> <span class="font-semibold">{{ tx.user_name }}</span>
+                                </div>
+                                <div class="flex justify-between items-end mt-1">
+                                    <div class="text-sm font-medium line-clamp-1 flex-1 pr-2">
+                                        {{ tx.items.length }} macam produk
+                                    </div>
+                                    <div class="font-bold text-slate-800 text-sm whitespace-nowrap">{{ formatRp(tx.total) }}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Expanded Detail -->
+                            <div v-if="expandedTx === tx.id" class="px-4 pb-4 border-t border-slate-200 pt-3 bg-slate-50">
+                                <h4 class="text-xs font-semibold text-secondary mb-2 uppercase tracking-wide">Rincian Item</h4>
+                                <div class="flex flex-col gap-2 mb-4">
+                                    <div v-for="item in tx.items" :key="item.id" class="flex justify-between items-start text-sm">
+                                        <div class="flex-1 pr-2">
+                                            <div class="text-slate-800/90">{{ item.name }}</div>
+                                            <div class="text-xs text-secondary">{{ item.qty }} x {{ formatRp(item.price) }}</div>
+                                        </div>
+                                        <div class="font-semibold">{{ formatRp(item.qty * item.price) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Actions -->
+                                <div v-if="user?.role === 'mahasiswa' && tx.status === 'pending'" class="mt-2">
+                                    <button @click.stop="cancelOrder(tx.id)" class="w-full py-2 border border-red-500/50 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/10 transition-colors">
+                                        Batalkan Pesanan
+                                    </button>
+                                </div>
+                                
+                                <div v-if="user?.role === 'admin' && getAllowedStatuses(tx.status).length" class="mt-2 border-t border-slate-200 pt-3 flex items-center gap-2">
+                                    <span class="text-xs text-secondary font-medium">Ubah Status:</span>
+                                    <select :value="tx.status" @change="(e) => updateTxStatus(tx.id, e.target.value)" class="flex-1 bg-white border border-slate-300 rounded px-2 py-1.5 text-slate-800 focus:outline-none focus:border-brand-info">
+                                        <option :value="tx.status" disabled>{{ getStatusLabel(tx.status) }} (saat ini)</option>
+                                        <option v-for="s in getAllowedStatuses(tx.status)" :key="s" :value="s" class="bg-brand-dark">
+                                            {{ getStatusLabel(s) }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY VIEW -->
+                <div v-else-if="route === '/history'" class="flex-1 flex flex-col h-screen overflow-hidden" key="history">
+                    <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex gap-3 items-center">
+                        <img src="logo-icon.png" alt="TL Mate" class="w-10 h-10 rounded-lg">
+                        <div>
+                            <h1 class="text-2xl font-bold leading-none">Riwayat Belajar</h1>
+                            <p class="text-secondary text-sm mt-0.5">{{ user?.role === 'admin' ? 'Pencapaian Kuis Mahasiswa' : 'Progres pencapaian pemahaman SOP' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 flex flex-col gap-4 no-scrollbar">
+                        <div v-if="history.length === 0" class="text-center py-10 text-secondary">
+                            Belum ada riwayat kuis.
+                        </div>
+                        
+                        <!-- Mahasiswa View -->
+                        <template v-if="user?.role !== 'admin'">
+                            <div v-for="item in sortedHistory" :key="item.id" class="glass-card !p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                                         :class="item.score >= 80 ? 'bg-brand-success/20 text-brand-success' : 'bg-slate-100 text-slate-600'">
+                                        {{ item.score }}
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-[15px] mb-0.5">{{ getToolName(item.tool_id) }}</h3>
+                                        <p class="text-xs text-secondary">{{ item.date }}</p>
+                                    </div>
+                                </div>
+                                <svg v-if="item.score >= 80" class="w-6 h-6 text-brand-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </template>
+
+                        <!-- Admin View -->
+                        <template v-else>
+                            <div v-for="group in adminGroupedHistory" :key="group.user_id" class="glass-card flex flex-col overflow-hidden">
+                                <div class="p-4 cursor-pointer hover:bg-slate-50" @click="toggleGroup(group.user_id)">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-full overflow-hidden bg-slate-100 shrink-0">
+                                            <img :src="'https://ui-avatars.com/api/?name='+group.user_name+'&background=2A6055&color=fff'" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-bold text-base leading-tight">{{ group.user_name }}</h3>
+                                            <p class="text-[11px] text-secondary mt-0.5">NIM: {{ group.user_nim }}</p>
+                                            <div class="flex items-center gap-3 text-xs mt-1.5">
+                                                <span class="text-secondary">Rata-rata: <strong class="text-slate-800">{{ group.avgScore }}</strong></span>
+                                                <span class="text-brand-info">Lulus: {{ group.progress }} kuis</span>
+                                            </div>
+                                        </div>
+                                        <svg class="w-5 h-5 text-secondary transition-transform" :class="expandedUser === group.user_id ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                <div v-if="expandedUser === group.user_id" class="border-t border-slate-200 p-4 bg-slate-50 flex flex-col gap-2">
+                                    <div v-for="score in group.scores" :key="score.id" class="flex justify-between items-center text-sm p-2 rounded hover:bg-slate-50">
+                                        <div>
+                                            <div class="text-slate-800">{{ getToolName(score.tool_id) }}</div>
+                                            <div class="text-[10px] text-secondary">{{ score.date }}</div>
+                                        </div>
+                                        <div class="font-bold px-2 py-1 rounded" :class="score.score >= 80 ? 'bg-brand-success/20 text-brand-success' : 'bg-red-500/20 text-red-400'">
+                                            {{ score.score }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- PROFILE VIEW -->
+                <div v-else-if="route === '/profile'" class="flex-1 flex flex-col h-screen overflow-hidden" key="profile">
+                    <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 flex justify-center items-center gap-2">
+                        <img src="logo-icon.png" alt="TL Mate" class="w-8 h-8 rounded-lg">
+                        <h1 class="text-2xl font-bold">Profil Saya</h1>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-24 no-scrollbar">
+                        <div class="flex flex-col items-center mb-8">
+                            <div class="relative mb-4">
+                                <div class="w-24 h-24 rounded-full border-4 border-slate-200 overflow-hidden">
+                                    <img :src="user?.photo_url" class="w-full h-full object-cover" />
+                                </div>
+                                <div @click="$refs.photoInput.click()" class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand-success text-white flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                                <input type="file" accept="image/*" class="hidden" ref="photoInput" @change="handlePhotoUpload">
+                            </div>
+                            <h2 class="text-xl font-bold">{{ user?.name }}</h2>
+                            <p class="text-secondary text-sm">{{ user?.email }}</p>
+                        </div>
+
+                        <div class="glass-card flex flex-col mb-6">
+                            <div class="p-4 border-b border-slate-200 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors" @click="showPasswordModal = true">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    <span class="font-medium">Ubah Password</span>
+                                </div>
+                                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                            <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors" @click="showHelpModal = true">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="font-medium">Bantuan & Informasi</span>
+                                </div>
+                                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </div>
+
+                        <button @click="doLogout" class="w-full py-4 glass-card !border-red-500/30 !text-red-400 font-bold hover:!bg-red-500/10 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            Keluar Aplikasi
+                        </button>
+                    </div>
+
+                    <!-- Modals -->
+                    <div v-if="showPasswordModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm">
+                            <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-4 text-center">Ubah Password</h2>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Password Lama</label>
+                                    <input v-model="passwordForm.old" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Password Baru</label>
+                                    <input v-model="passwordForm.new" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Minimal 6 karakter">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-secondary mb-1 block">Konfirmasi Password Baru</label>
+                                    <input v-model="passwordForm.confirm" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none">
+                                </div>
+                                <p v-if="passwordError" class="text-red-500 text-xs text-center font-medium">{{ passwordError }}</p>
+                                <div class="flex gap-3 mt-2">
+                                    <button @click="showPasswordModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
+                                    <button @click="doChangePassword" class="btn-lab flex-1 py-2.5 rounded-lg text-sm font-bold">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="showHelpModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div class="glass-card w-full max-w-sm text-center p-6">
+                            <div class="w-12 h-12 rounded-full bg-brand-info/10 text-brand-info flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h2 class="font-bold text-lg mb-3">Bantuan & Informasi</h2>
+                            <p class="text-secondary text-sm mb-2">Aplikasi ini dibuat TIM B.</p>
+                            <p class="text-secondary text-sm mb-4">
+                                Silahkan hubungi admin WA <a href="https://wa.me/6281242826898" target="_blank" class="text-brand-info font-bold hover:underline">0812-4282-6898</a>, jika ada kendala.
+                            </p>
+                            <p class="text-secondary text-sm mb-6">terima kasih</p>
+                            <button @click="showHelpModal = false" class="btn-lab w-full py-3">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- BOTTOM NAVIGATION (Only show on main tabs) -->
+            <div v-if="['/', '/toko', '/history', '/profile'].includes(route)" class="absolute bottom-0 w-full glass-nav px-6 pb-8 pt-4 flex justify-between items-center rounded-t-[32px]">
+                <button @click="navigate('/')" class="flex flex-col items-center gap-1 transition-colors" :class="route === '/' ? 'text-brand-info' : 'text-white/60'">
+                    <svg class="w-6 h-6" :fill="route === '/' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+                <button @click="navigate('/toko')" class="flex flex-col items-center gap-1 transition-colors" :class="route === '/toko' ? 'text-brand-info' : 'text-white/60'">
+                    <svg class="w-6 h-6" :fill="route === '/toko' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span class="text-[10px] font-medium">Toko</span>
+                </button>
+                <button @click="navigate('/history')" class="flex flex-col items-center gap-1 transition-colors" :class="route === '/history' ? 'text-brand-info' : 'text-white/60'">
+                    <svg class="w-6 h-6" :fill="route === '/history' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    <span class="text-[10px] font-medium">History</span>
+                </button>
+                <button @click="navigate('/profile')" class="flex flex-col items-center gap-1 transition-colors" :class="route === '/profile' ? 'text-brand-info' : 'text-white/60'">
+                    <svg class="w-6 h-6" :fill="route === '/profile' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span class="text-[10px] font-medium">Profil</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        const USE_MOCK = false; // Set false to use real Google Apps Script backend
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwsWOVoSYqm_F36cPuyK7AchGzEZa6bhr4VOz_F413I-URbqHlwQQhuLeF9e0oWvJd0/exec'; // Replace later
+        const GAS_API_KEY = 'TL-MATE-2026';
+
+        // --- MOCK DATABASE ---
+        const MOCK_DB = {
+            users: [
+                { id: 1, nim: "23110001", name: "Mahasiswa Praktikan", email: "user@poltekkes.ac.id", password: "password", role: "mahasiswa", photo_url: "https://ui-avatars.com/api/?name=Mahasiswa+P&background=2A6055&color=fff&size=128" },
+                { id: 2, nim: "-", name: "Admin Laboratorium", email: "admin@poltekkes.ac.id", password: "admin123", role: "admin", photo_url: "https://ui-avatars.com/api/?name=Admin+Lab&background=EFA93C&color=fff&size=128" },
+                { id: 3, nim: "23110003", name: "Andi Saputra", email: "andi@poltekkes.ac.id", password: "password", role: "mahasiswa", photo_url: "https://ui-avatars.com/api/?name=Andi+S&background=2A6055&color=fff&size=128" },
+                { id: 4, nim: "23110004", name: "Rina Kumala", email: "rina@poltekkes.ac.id", password: "password", role: "mahasiswa", photo_url: "https://ui-avatars.com/api/?name=Rina+K&background=2A6055&color=fff&size=128" }
+            ],
+            tools: [
+                { 
+                    id: 1, jenis: "Optik", name: "Mikroskop Binokuler Olympus CX23", img: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=600&q=80", 
+                    desc: "Mikroskop standar untuk praktikum hematologi dan parasitologi dasar.", 
+                    function: "Digunakan untuk mengamati sediaan mikroskopis sel darah, bakteri, dan telur cacing dengan perbesaran hingga 1000x.", video_url: "",
+                    parts: [
+                        { name: "Lensa Okuler", desc: "Lensa yang dekat dengan mata pengamat, berfungsi memperbesar bayangan dari lensa objektif (umumnya perbesaran 10x)." },
+                        { name: "Revolver (Pemutar Lensa)", desc: "Bagian yang berputar tempat melekatnya beberapa lensa objektif." },
+                        { name: "Lensa Objektif", desc: "Lensa yang dekat dengan sediaan. Terdapat beberapa perbesaran (4x, 10x, 40x, dan 100x minyak imersi)." },
+                        { name: "Meja Preparat (Stage)", desc: "Tempat meletakkan kaca objek (preparat) yang dilengkapi dengan penjepit." },
+                        { name: "Kondensor & Diafragma Iris", desc: "Memfokuskan cahaya ke sediaan dan mengatur intensitas/jumlah cahaya yang masuk." },
+                        { name: "Makrometer & Mikrometer", desc: "Kenop pengatur fokus kasar (makro) untuk mencari bayangan awal, dan halus (mikro) untuk mempertajam fokus." }
+                    ]
+                },
+                { 
+                    id: 2, jenis: "Sampel", name: "Centrifuge Hettich EBA 200", img: "https://images.unsplash.com/photo-1612053916947-2b7e192bd858?auto=format&fit=crop&w=600&q=80", 
+                    desc: "Sentrifus meja ringkas untuk sampel darah dan urine.", 
+                    function: "Memisahkan komponen darah (serum/plasma dari sel darah merah) atau sedimen urine menggunakan gaya sentrifugal.", video_url: "",
+                    parts: [
+                        { name: "Rotor", desc: "Bagian tengah yang berputar tempat memasukkan tabung sampel (biasanya fixed-angle)." },
+                        { name: "Sleeve / Tempat Tabung", desc: "Selongsong penahan tabung agar tetap seimbang saat putaran kecepatan tinggi." },
+                        { name: "Panel Kontrol", desc: "Berisi tombol untuk mengatur kecepatan putar (RPM/RCF) dan waktu (Timer)." },
+                        { name: "Penutup (Lid) & Pengunci", desc: "Menutup area rotor dengan sistem safety-lock yang tidak bisa dibuka saat mesin masih berputar." }
+                    ]
+                },
+                { 
+                    id: 3, jenis: "Kimia", name: "Spektrofotometer UV-Vis", img: "https://images.unsplash.com/photo-1574482620826-40685ca5ebe2?auto=format&fit=crop&w=600&q=80", 
+                    desc: "Alat analisis kuantitatif komponen kimia darah.", 
+                    function: "Mengukur absorbansi cahaya sampel uji untuk menentukan kadar glukosa, kolesterol, dan parameter kimia klinik lainnya.", video_url: "",
+                    parts: [
+                        { name: "Sumber Cahaya", desc: "Lampu Tungsten-Halogen (untuk sinar tampak) dan Deuterium (untuk UV)." },
+                        { name: "Monokromator", desc: "Mendispersikan cahaya putih menjadi spektrum dan menyeleksi panjang gelombang spesifik." },
+                        { name: "Kompartemen Kuvet (Cuvette Holder)", desc: "Ruang gelap tempat meletakkan kuvet yang berisi sampel cairan." },
+                        { name: "Detektor (Photodiode)", desc: "Menangkap energi cahaya yang diteruskan melalui sampel dan mengubahnya menjadi sinyal listrik." },
+                        { name: "Layar Display", desc: "Menampilkan hasil pengukuran nilai absorbansi (A) atau transmitansi (%T)." }
+                    ]
+                }
+            ],
+            sops: [
+                { id: 1, tool_id: 1, step_title: "Persiapan Lingkungan", content: "Letakkan mikroskop di atas meja datar, kokoh, dan terhindar dari cahaya matahari langsung. Hubungkan kabel daya ke stop kontak yang stabil." },
+                { id: 2, tool_id: 1, step_title: "Penyesuaian Pencahayaan", content: "Nyalakan saklar power (ON). Atur intensitas cahaya memutar kenop pengatur tegangan (jangan langsung maksimal). Buka diafragma iris kondensor secukupnya." },
+                { id: 3, tool_id: 1, step_title: "Penempatan Preparat", content: "Turunkan meja preparat menggunakan makrometer. Letakkan kaca objek di atas meja, jepit perlahan. Posisikan objek tepat di atas lubang cahaya masuk." },
+                { id: 4, tool_id: 1, step_title: "Pencarian Fokus (Lensa 10x)", content: "Putar revolver ke lensa objektif terkecil (10x). Sambil melihat dari samping, naikkan meja dengan makrometer hingga mendekati lensa. Lihat lewat okuler, turunkan perlahan hingga fokus didapat." },
+                { id: 5, tool_id: 1, step_title: "Pengamatan Lanjut (100x)", content: "Teteskan 1 tetes minyak imersi pada area preparat. Geser lensa objektif 100x perlahan hingga menyentuh minyak. Gunakan HANYA mikrometer untuk mempertajam fokus." }
+            ],
+            quizzes: [
+                // Tool 1 Quizzes
+                { id: 1, tool_id: 1, question: "Komponen mikroskop mana yang pertama kali digunakan untuk mencari fokus bayangan sediaan?", opt_a: "Makrometer", opt_b: "Mikrometer", opt_c: "Kondensor", opt_d: "Revolver", answer: "A" },
+                { id: 2, tool_id: 1, question: "Lensa objektif perbesaran berapakah yang WAJIB menggunakan minyak imersi?", opt_a: "10x", opt_b: "40x", opt_c: "100x", opt_d: "1000x", answer: "C" },
+                { id: 3, tool_id: 1, question: "Saat menaikkan meja preparat untuk mendekatkan sediaan ke lensa objektif, posisi mata praktikan seharusnya?", opt_a: "Melihat melalui lensa okuler", opt_b: "Melihat dari arah samping mikroskop", opt_c: "Melihat melalui kondensor", opt_d: "Memejamkan satu mata", answer: "B" },
+                { id: 4, tool_id: 1, question: "Apa fungsi dari diafragma iris pada mikroskop?", opt_a: "Memfokuskan bayangan objek", opt_b: "Mengatur jumlah cahaya yang masuk ke sediaan", opt_c: "Menggeser sediaan ke kanan dan kiri", opt_d: "Membersihkan lensa objektif", answer: "B" },
+                { id: 5, tool_id: 1, question: "Jika objek sudah fokus pada lensa 10x dan ingin dipindah ke 40x, knop apa yang diharamkan untuk diputar ekstensif?", opt_a: "Makrometer", opt_b: "Mikrometer", opt_c: "Pengatur cahaya", opt_d: "Penggeser meja", answer: "A" }
+            ],
+            products: [
+                { id: 1, name: "Reagen Giemsa Stain 100ml", price: 125000, img: "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=400&q=80", link: "https://wa.me/6281242826898?text=Halo%20saya%20ingin%20pesan%20Giemsa", stock: 15 },
+                { id: 2, name: "Tabung Vacutainer EDTA (100 pcs)", price: 140000, img: "https://images.unsplash.com/photo-1584362917165-526a968579e8?auto=format&fit=crop&w=400&q=80", link: "https://wa.me/6281242826898", stock: 42 },
+                { id: 3, name: "Kaca Objek (Object Glass) Isi 72", price: 25000, img: "https://images.unsplash.com/photo-1530213786676-412f170f0e08?auto=format&fit=crop&w=400&q=80", link: "https://wa.me/6281242826898", stock: 120 },
+                { id: 4, name: "Yellow Tip Pipet (1000 pcs)", price: 85000, img: "https://images.unsplash.com/photo-1601646270577-4952d7e63ee9?auto=format&fit=crop&w=400&q=80", link: "https://wa.me/6281242826898", stock: 8 }
+            ],
+            history: [
+                { id: 1, user_id: 1, user_nim: "23110001", user_name: "Mahasiswa Praktikan", tool_id: 1, score: 80, date: "24/09/2026" },
+                { id: 2, user_id: 1, user_nim: "23110001", user_name: "Mahasiswa Praktikan", tool_id: 2, score: 60, date: "25/09/2026" },
+                { id: 3, user_id: 3, user_nim: "23110003", user_name: "Andi Saputra", tool_id: 1, score: 100, date: "26/09/2026" },
+                { id: 4, user_id: 4, user_nim: "23110004", user_name: "Rina Kumala", tool_id: 1, score: 40, date: "26/09/2026" }
+            ]
+        };
+
+        const initStorage = (key, fallback) => {
+            const data = JSON.parse(localStorage.getItem(key));
+            if (!data) return fallback;
+            // Migration: ensure tools have 'parts' array
+            if (key === 'tlm_tools') {
+                return data.map(t => {
+                    if (!t.parts) {
+                        const mockTool = MOCK_DB.tools.find(m => m.id === t.id);
+                        t.parts = mockTool ? mockTool.parts : [];
+                    }
+                    return t;
+                });
+            }
+            return data;
+        };
+
+        const app = createApp({
+            setup() {
+                const route = ref(window.location.hash.slice(1) || '/login');
+                const user = ref(JSON.parse(localStorage.getItem('tlm_user')) || null);
+                
+                // State
+                const jenisAlatOptions = ['Optik', 'Sampel', 'Sterilisasi', 'Hematologi', 'Kimia', 'Molekuler'];
+                const filterJenisList = ['Semua', ...jenisAlatOptions];
+                const selectedJenis = ref('Semua');
+                const users = ref(initStorage('tlm_users', MOCK_DB.users));
+                const tools = ref(initStorage('tlm_tools', MOCK_DB.tools));
+                const searchQuery = ref('');
+                const sops = ref(initStorage('tlm_sops', MOCK_DB.sops));
+                const products = ref(initStorage('tlm_products', MOCK_DB.products));
+                const history = ref(initStorage('tlm_history', MOCK_DB.history));
+                const quizzes = ref(initStorage('tlm_quizzes', MOCK_DB.quizzes));
+                const cart = ref(initStorage('tlm_cart', []));
+                
+                // Watchers for persistence
+                const stateMap = { users, tools, sops, products, history, quizzes, cart };
+                Object.keys(stateMap).forEach(key => {
+                    watch(stateMap[key], (newVal) => localStorage.setItem(`tlm_${key}`, JSON.stringify(newVal)), { deep: true });
+                });
+
+                const getSeedTransactions = () => {
+                    return [
+                        { id: 'TRX-1001', user_id: 1, user_name: "Mahasiswa Praktikan", date: '25/09/2026 10:00', items: [{ id: 1, name: 'Reagen Giemsa Stain 100ml', qty: 2, price: 125000 }], total: 250000, status: 'done' },
+                        { id: 'TRX-1002', user_id: 3, user_name: "Riset Mhs", date: '26/09/2026 14:30', items: [{ id: 2, name: 'Tabung Vacutainer EDTA (100 pcs)', qty: 1, price: 140000 }], total: 140000, status: 'shipped' },
+                        { id: 'TRX-1003', user_id: 1, user_name: "Mahasiswa Praktikan", date: '27/09/2026 09:15', items: [{ id: 3, name: 'Kaca Objek (Object Glass) Isi 72', qty: 3, price: 25000 }], total: 75000, status: 'pending' },
+                        { id: 'TRX-1004', user_id: 4, user_name: "Dosen Penguji", date: '27/09/2026 11:20', items: [{ id: 4, name: 'Yellow Tip Pipet (1000 pcs)', qty: 1, price: 85000 }], total: 85000, status: 'approved' },
+                        { id: 'TRX-1005', user_id: 1, user_name: "Mahasiswa Praktikan", date: '28/09/2026 08:00', items: [{ id: 4, name: 'Yellow Tip Pipet (1000 pcs)', qty: 2, price: 85000 }], total: 170000, status: 'cancelled' }
+                    ];
+                };
+
+                const transactions = ref(initStorage('tlm_transactions', getSeedTransactions()));
+
+                watch(transactions, (newVal) => {
+                    localStorage.setItem('tlm_transactions', JSON.stringify(newVal));
+                }, { deep: true });
+
+                const selectedTxFilter = ref('Semua');
+                const expandedTx = ref(null);
+                const expandedUser = ref(null);
+                
+                // Form & UI State
+                const loginForm = ref({ email: '', password: '' });
+                const loginError = ref('');
+                const registerForm = ref({ name: '', nim: '', email: '', password: '', confirm: '' });
+                const registerError = ref('');
+                const showPasswordModal = ref(false);
+                const passwordForm = ref({ old: '', new: '', confirm: '' });
+                const passwordError = ref('');
+                const showHelpModal = ref(false);
+                const isLoading = ref(false);
+                const toast = ref({ show: false, message: '' });
+                const hasUnderstood = ref(false);
+                const showSplash = ref(true);
+
+                // Quiz State
+                const quizState = ref({
+                    currentIndex: 0,
+                    score: 0,
+                    finished: false,
+                    selectedAnswer: null,
+                    answers: []
+                });
+
+                // Router Watcher
+                window.addEventListener('hashchange', () => {
+                    route.value = window.location.hash.slice(1) || '/';
+                    if (!user.value && route.value !== '/login' && route.value !== '/register') {
+                        navigate('/login');
+                    }
+                });
+
+                // Fetch Data function (Mock or GAS)
+                const fetchData = async (action, payload = {}) => {
+                    if (USE_MOCK) {
+                        return new Promise(resolve => {
+                            setTimeout(() => {
+                                switch (action) {
+                                    case 'login':
+                                        const foundUser = users.value.find(u => u.email === payload.email && u.password === payload.password);
+                                        resolve({ success: !!foundUser, data: foundUser });
+                                        break;
+                                     case 'register':
+                                         const exists = users.value.find(u => u.email === payload.email);
+                                         if (exists) {
+                                             resolve({ success: false, error: 'Email sudah terdaftar' });
+                                         } else {
+                                             const newUser = {
+                                                 id: Date.now(),
+                                                 name: payload.name,
+                                                 nim: payload.nim,
+                                                 email: payload.email,
+                                                 password: payload.password,
+                                                 role: 'mahasiswa',
+                                                 photo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name)}&background=2A6055&color=fff&size=128`
+                                             };
+                                             users.value.push(newUser);
+                                             resolve({ success: true, data: newUser });
+                                         }
+                                         break;
+                                     case 'getTools': resolve({ success: true, data: tools.value }); break;
+                                     case 'getSOPs': resolve({ success: true, data: sops.value }); break;
+                                     case 'getQuizzes': resolve({ success: true, data: quizzes.value }); break;
+                                     case 'getProducts': resolve({ success: true, data: products.value }); break;
+                                     case 'getHistory': resolve({ success: true, data: history.value }); break;
+                                     case 'saveHistory':
+                                         const newHistory = { ...payload, id: Date.now(), user_name: user.value.name, user_nim: user.value.nim || '-', date: new Date().toLocaleDateString('id-ID') };
+                                         history.value.push(newHistory);
+                                         resolve({ success: true });
+                                         break;
+                                    default: resolve({ success: false });
+                                }
+                            }, 500); // Simulate network delay
+                        });
+                    } else {
+                        // GAS Fetch Implementation
+                        try {
+                            const res = await fetch(GAS_URL, {
+                                method: 'POST',
+                                redirect: 'follow',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify({ action, payload, api_key: GAS_API_KEY })
+                            });
+                            return await res.json();
+                        } catch (error) {
+                            console.error('API Error:', error);
+                            return { success: false, error: 'Network Error' };
+                        }
+                    }
+                };
+
+                // Helper for non-blocking BE sync
+                const persist = async (action, payload) => {
+                    if (!USE_MOCK) {
+                        try { await fetchData(action, payload); } catch(e) {}
+                    }
+                };
+
+                // Lifecycle
+                onMounted(async () => {
+                    setTimeout(() => showSplash.value = false, 2500);
+                    if (user.value && (route.value === '/login' || route.value === '/register')) navigate('/');
+                    if (user.value) await loadInitialData();
+                });
+
+                // Actions
+                const loadInitialData = async () => {
+                    if (USE_MOCK) return; // Refs are already loaded from localStorage
+                    tools.value = (await fetchData('getTools')).data || [];
+                    products.value = (await fetchData('getProducts')).data || [];
+                    history.value = (await fetchData('getHistory')).data || [];
+                    sops.value = (await fetchData('getSOPs')).data || [];
+                    quizzes.value = (await fetchData('getQuizzes')).data || [];
+                    transactions.value = (await fetchData('getTransactions', { user_id: user.value.id, role: user.value.role })).data || [];
+                };
+
+                const doLogin = async () => {
+                    if (!loginForm.value.email || !loginForm.value.password) {
+                        loginError.value = "Email dan password wajib diisi";
+                        return;
+                    }
+                    isLoading.value = true;
+                    loginError.value = "";
+                    const res = await fetchData('login', loginForm.value);
+                    isLoading.value = false;
+                    
+                    if (res.success && res.data) {
+                        user.value = res.data;
+                        localStorage.setItem('tlm_user', JSON.stringify(res.data));
+                        await loadInitialData();
+                        navigate('/');
+                        showToast("Berhasil login!");
+                    } else {
+                        loginError.value = "Email atau password salah. Coba: user@poltekkes.ac.id / password";
+                    }
+                };
+
+                const doRegister = async () => {
+                    const f = registerForm.value;
+                    if (!f.name || !f.nim || !f.email || !f.password || !f.confirm) {
+                        registerError.value = "Semua kolom wajib diisi";
+                        return;
+                    }
+                    if (!/^\S+@\S+\.\S+$/.test(f.email)) {
+                        registerError.value = "Format email tidak valid";
+                        return;
+                    }
+                    if (f.password.length < 6) {
+                        registerError.value = "Password minimal 6 karakter";
+                        return;
+                    }
+                    if (f.password !== f.confirm) {
+                        registerError.value = "Konfirmasi password tidak cocok";
+                        return;
+                    }
+                    isLoading.value = true;
+                    registerError.value = "";
+                    const res = await fetchData('register', f);
+                    isLoading.value = false;
+                    
+                    if (res.success) {
+                        showToast("Pendaftaran berhasil!");
+                        loginForm.value.email = f.email;
+                        loginForm.value.password = '';
+                        registerForm.value = { name: '', nim: '', email: '', password: '', confirm: '' };
+                        navigate('/login');
+                    } else {
+                        registerError.value = res.error || "Pendaftaran gagal";
+                    }
+                };
+
+                const doChangePassword = async () => {
+                    const f = passwordForm.value;
+                    if (!f.old || !f.new || !f.confirm) {
+                        passwordError.value = "Semua kolom wajib diisi";
+                        return;
+                    }
+                    if (USE_MOCK && f.old !== user.value.password) {
+                        passwordError.value = "Password lama salah";
+                        return;
+                    }
+                    if (f.new.length < 6) {
+                        passwordError.value = "Password baru minimal 6 karakter";
+                        return;
+                    }
+                    if (f.new !== f.confirm) {
+                        passwordError.value = "Konfirmasi password tidak cocok";
+                        return;
+                    }
+                    
+                    if (!USE_MOCK) {
+                        isLoading.value = true;
+                        const res = await fetchData('changePassword', { user_id: user.value.id, old: f.old, new: f.new });
+                        isLoading.value = false;
+                        if (!res.success) {
+                            passwordError.value = res.error || "Gagal mengubah password";
+                            return;
+                        }
+                    } else {
+                        user.value.password = f.new;
+                        localStorage.setItem('tlm_user', JSON.stringify(user.value));
+                        const dbUser = users.value.find(u => u.id === user.value.id);
+                        if (dbUser) dbUser.password = f.new;
+                    }
+                    
+                    showToast("Password berhasil diubah");
+                    showPasswordModal.value = false;
+                    passwordForm.value = { old: '', new: '', confirm: '' };
+                    passwordError.value = '';
+                };
+
+                const handlePhotoUpload = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const newUrl = ev.target.result;
+                        user.value.photo_url = newUrl;
+                        localStorage.setItem('tlm_user', JSON.stringify(user.value));
+                        const dbUser = users.value.find(u => u.id === user.value.id);
+                        if (dbUser) dbUser.photo_url = newUrl;
+                        persist('updateProfile', { user_id: user.value.id, photo_url: newUrl });
+                        showToast("Foto profil diperbarui");
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = ''; // Reset input
+                };
+
+                const doLogout = () => {
+                    user.value = null;
+                    localStorage.removeItem('tlm_user');
+                    navigate('/login');
+                };
+
+                const navigate = (path) => {
+                    window.location.hash = path;
+                    expandedUser.value = null;
+                    if (path.startsWith('/tool/')) hasUnderstood.value = false;
+                    if (path.startsWith('/quiz/')) initQuiz(path.split('/')[2]);
+                };
+
+                const showToast = (msg) => {
+                    toast.value = { show: true, message: msg };
+                    setTimeout(() => toast.value.show = false, 3000);
+                };
+
+                // Computed for Tool View
+                const currentToolId = computed(() => {
+                    const parts = route.value.split('/');
+                    return (parts[1] === 'tool' || parts[1] === 'quiz') ? parseInt(parts[2]) : null;
+                });
+
+                const currentTool = computed(() => tools.value.find(t => t.id === currentToolId.value));
+                const currentSOPs = computed(() => sops.value.filter(s => s.tool_id === currentToolId.value).sort((a,b) => a.id - b.id));
+                const currentQuizzes = computed(() => {
+                    // Random 5 questions for MVP
+                    const toolQuizzes = quizzes.value.filter(q => q.tool_id === currentToolId.value);
+                    return toolQuizzes.sort(() => 0.5 - Math.random()).slice(0, 5);
+                });
+
+                // Dashboard Search & Filter
+                const filteredTools = computed(() => {
+                    let list = tools.value;
+                    if (selectedJenis.value !== 'Semua') {
+                        list = list.filter(t => t.jenis === selectedJenis.value);
+                    }
+                    if (searchQuery.value) {
+                        const q = searchQuery.value.toLowerCase();
+                        list = list.filter(t => t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+                    }
+                    return list;
+                });
+
+                // Quiz Logic
+                const initQuiz = (toolId) => {
+                    quizState.value = {
+                        currentIndex: 0,
+                        score: 0,
+                        finished: false,
+                        selectedAnswer: null,
+                        answers: []
+                    };
+                };
+
+                const currentQuestion = computed(() => currentQuizzes.value[quizState.value.currentIndex]);
+                
+                const currentQuestionOptions = computed(() => {
+                    const q = currentQuestion.value;
+                    if(!q) return {};
+                    return { A: q.opt_a, B: q.opt_b, C: q.opt_c, D: q.opt_d };
+                });
+
+                // Admin Edit Logic
+                const editMode = ref(null); // 'tool', 'product'
+                const editFormData = ref({});
+                const editSOPsList = ref([]);
+                const editPartsList = ref([]);
+
+                const openEditTool = (tool = null) => {
+                    editMode.value = 'tool';
+                    if (tool) {
+                        editFormData.value = { jenis: '', ...tool };
+                        editSOPsList.value = JSON.parse(JSON.stringify(sops.value.filter(s => s.tool_id === tool.id).sort((a,b)=>a.id-b.id)));
+                        editPartsList.value = JSON.parse(JSON.stringify(tool.parts || []));
+                    } else {
+                        editFormData.value = { name: '', desc: '', function: '', img: '', video_url: '', jenis: '' };
+                        editSOPsList.value = [];
+                        editPartsList.value = [];
+                    }
+                };
+
+                const saveTool = () => {
+                    if (!editFormData.value.name) return showToast("Nama alat wajib diisi");
+                    
+                    editFormData.value.parts = editPartsList.value;
+
+                    if (editFormData.value.id) {
+                        const idx = tools.value.findIndex(t => t.id === editFormData.value.id);
+                        if (idx > -1) tools.value[idx] = { ...editFormData.value };
+                        sops.value = sops.value.filter(s => s.tool_id !== editFormData.value.id);
+                        editSOPsList.value.forEach(s => sops.value.push({ ...s, tool_id: editFormData.value.id, id: s.id || Date.now() + Math.random() }));
+                        persist('saveTool', { tool: editFormData.value, sops: editSOPsList.value.map(s => ({...s, tool_id: editFormData.value.id})) });
+                        showToast("Alat berhasil diubah");
+                    } else {
+                        const newId = Date.now();
+                        editFormData.value.id = newId;
+                        tools.value.push({ ...editFormData.value });
+                        const newSops = editSOPsList.value.map(s => ({ ...s, tool_id: newId, id: Date.now() + Math.random() }));
+                        newSops.forEach(s => sops.value.push(s));
+                        persist('saveTool', { tool: editFormData.value, sops: newSops });
+                        showToast("Alat baru ditambahkan");
+                    }
+                    editMode.value = null;
+                };
+
+                const deleteTool = (id) => {
+                    if(!confirm("Yakin hapus alat ini? Seluruh SOP terkait juga akan terhapus.")) return;
+                    tools.value = tools.value.filter(t => t.id !== id);
+                    sops.value = sops.value.filter(s => s.tool_id !== id);
+                    persist('deleteTool', { id });
+                    showToast("Alat dihapus");
+                };
+
+                const openEditProduct = (prod = null) => {
+                    editMode.value = 'product';
+                    if (prod) {
+                        editFormData.value = { ...prod };
+                    } else {
+                        editFormData.value = { name: '', price: 0, stock: 0, img: '', link: '' };
+                    }
+                };
+
+                const saveProduct = () => {
+                    if (!editFormData.value.name) return showToast("Nama produk wajib diisi");
+                    
+                    let finalProduct;
+                    if (editFormData.value.id) {
+                        const idx = products.value.findIndex(p => p.id === editFormData.value.id);
+                        if (idx > -1) {
+                            finalProduct = { ...editFormData.value, price: Number(editFormData.value.price), stock: Number(editFormData.value.stock) };
+                            products.value[idx] = finalProduct;
+                        }
+                        showToast("Produk diubah");
+                    } else {
+                        finalProduct = { ...editFormData.value, id: Date.now(), price: Number(editFormData.value.price), stock: Number(editFormData.value.stock) };
+                        products.value.push(finalProduct);
+                        showToast("Produk ditambahkan");
+                    }
+                    if (finalProduct) persist('saveProduct', finalProduct);
+                    editMode.value = null;
+                };
+
+                const deleteProduct = (id) => {
+                    if(!confirm("Yakin hapus produk ini?")) return;
+                    products.value = products.value.filter(p => p.id !== id);
+                    persist('deleteProduct', { id });
+                    showToast("Produk dihapus");
+                };
+
+                const handleImageUpload = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        editFormData.value.img = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                const selectAnswer = (ans) => {
+                    quizState.value.selectedAnswer = ans;
+                };
+
+                const nextQuestion = async () => {
+                    const isCorrect = quizState.value.selectedAnswer === currentQuestion.value.answer;
+                    if (isCorrect) quizState.value.score += (100 / currentQuizzes.value.length);
+                    
+                    quizState.value.answers.push({
+                        q_id: currentQuestion.value.id,
+                        answer: quizState.value.selectedAnswer,
+                        correct: isCorrect
+                    });
+
+                    if (quizState.value.currentIndex < currentQuizzes.value.length - 1) {
+                        quizState.value.currentIndex++;
+                        quizState.value.selectedAnswer = null;
+                    } else {
+                        // Finish Quiz
+                        quizState.value.finished = true;
+                        // Save History
+                        await fetchData('saveHistory', {
+                            user_id: user.value.id,
+                            tool_id: currentToolId.value,
+                            score: Math.round(quizState.value.score)
+                        });
+                        // Update local history array for view
+                        history.value = (await fetchData('getHistory', { user_id: user.value.id })).data;
+                        if (quizState.value.score >= 80) {
+                            showToast("Selamat! Kuis berhasil diselesaikan.");
+                        }
+                    }
+                };
+
+                // Format Currency
+                const formatRp = (val) => {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+                };
+
+                // YouTube Helper
+                const ytEmbed = (url) => {
+                    if (!url) return null;
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+                };
+
+                // Cart Logic
+                const getCartQty = (id) => {
+                    const item = cart.value.find(i => i.id === id);
+                    return item ? item.qty : 0;
+                };
+
+                const addToCart = (product) => {
+                    const existing = cart.value.find(i => i.id === product.id);
+                    if (existing) {
+                        if (existing.qty < product.stock) {
+                            existing.qty++;
+                            showToast("+1 ditambahkan ke keranjang");
+                        } else {
+                            showToast("Stok maksimum tercapai");
+                        }
+                    } else {
+                        if (product.stock > 0) {
+                            cart.value.push({ id: product.id, qty: 1 });
+                            showToast("Berhasil ditambahkan ke keranjang");
+                        } else {
+                            showToast("Stok kosong");
+                        }
+                    }
+                };
+
+                const updateQty = (id, delta) => {
+                    const item = cart.value.find(i => i.id === id);
+                    const product = products.value.find(p => p.id === id);
+                    if (item && product) {
+                        const newQty = item.qty + delta;
+                        if (newQty > 0 && newQty <= product.stock) {
+                            item.qty = newQty;
+                        }
+                    }
+                };
+
+                const removeFromCart = (id) => {
+                    cart.value = cart.value.filter(i => i.id !== id);
+                };
+
+                const cartItems = computed(() => {
+                    return cart.value.map(item => {
+                        const product = products.value.find(p => p.id === item.id);
+                        return product ? { ...product, qty: item.qty } : null;
+                    }).filter(Boolean);
+                });
+
+                const cartTotal = computed(() => {
+                    return cartItems.value.reduce((total, item) => total + (item.price * item.qty), 0);
+                });
+
+                const cartCount = computed(() => {
+                    return cart.value.reduce((total, item) => total + item.qty, 0);
+                });
+
+                const checkoutWhatsApp = () => {
+                    if (cartItems.value.length === 0) return;
+                    
+                    // 1. Simpan ke Riwayat Transaksi (Mock)
+                    const now = new Date();
+                    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    const newTx = {
+                        id: 'TRX-' + Math.floor(1000 + Math.random() * 9000),
+                        user_id: user.value.id,
+                        user_name: user.value.name,
+                        date: formattedDate,
+                        items: cartItems.value.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
+                        total: cartTotal.value,
+                        status: 'pending'
+                    };
+                    
+                    transactions.value.unshift(newTx); // Add to top
+                    persist('createTransaction', newTx);
+
+                    // 2. Build WA Message
+                    let text = "Halo Admin, berikut ini pesanan saya :\n\n";
+                    cartItems.value.forEach((item, index) => {
+                        text += `${index + 1}. ${item.name}\n`;
+                        text += `   ${item.qty} x ${formatRp(item.price)} = ${formatRp(item.price * item.qty)}\n`;
+                    });
+                    
+                    text += `\nJumlah total yang harus dibayar : ${formatRp(cartTotal.value)}`;
+                    text += `\n\nMohon diproses, Thanks`;
+                    
+                    const waNumber = "6281242826898"; // Base admin number
+                    const encodedText = encodeURIComponent(text);
+                    const link = `https://wa.me/${waNumber}?text=${encodedText}`;
+                    
+                    // 3. Kosongkan keranjang & Buka WA
+                    cart.value = [];
+                    window.open(link, '_blank');
+                    navigate('/toko/transaksi');
+                };
+
+                const filteredTransactions = computed(() => {
+                    let list = transactions.value;
+                    // Role Filter
+                    if (user.value?.role !== 'admin') {
+                        list = list.filter(tx => tx.user_id === user.value.id);
+                    }
+                    // Status Filter
+                    if (selectedTxFilter.value !== 'Semua') {
+                        const statusMap = {
+                            'Pending': 'pending',
+                            'Disetujui': 'approved',
+                            'Dikirim': 'shipped',
+                            'Selesai': 'done',
+                            'Dibatalkan': 'cancelled'
+                        };
+                        list = list.filter(tx => tx.status === statusMap[selectedTxFilter.value]);
+                    }
+                    return list;
+                });
+
+                const getStatusColor = (status) => {
+                    const map = {
+                        'pending': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                        'approved': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                        'shipped': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                        'done': 'bg-brand-success/20 text-brand-success border-brand-success/30',
+                        'cancelled': 'bg-red-500/20 text-red-400 border-red-500/30'
+                    };
+                    return map[status] || 'bg-slate-100 text-slate-600 border-slate-200';
+                };
+
+                const getStatusLabel = (status) => {
+                    const map = {
+                        'pending': 'Menunggu Konfirmasi',
+                        'approved': 'Disetujui Admin',
+                        'shipped': 'Dikirim',
+                        'done': 'Selesai',
+                        'cancelled': 'Dibatalkan'
+                    };
+                    return map[status] || status;
+                };
+
+                const getAllowedStatuses = (status) => {
+                    const map = {
+                        'pending': ['approved', 'cancelled'],
+                        'approved': ['shipped', 'done', 'cancelled'],
+                        'shipped': ['done', 'cancelled'],
+                        'done': [],
+                        'cancelled': []
+                    };
+                    return map[status] || [];
+                };
+
+                const updateTxStatus = (id, newStatus) => {
+                    const tx = transactions.value.find(t => t.id === id);
+                    if (tx) {
+                        tx.status = newStatus;
+                        persist('updateTransactionStatus', { id, status: newStatus });
+                        showToast(`Status diperbarui ke ${getStatusLabel(newStatus)}`);
+                    }
+                };
+                
+                const cancelOrder = (id) => {
+                    const tx = transactions.value.find(t => t.id === id);
+                    if (tx && tx.status === 'pending') {
+                        tx.status = 'cancelled';
+                        persist('updateTransactionStatus', { id, status: 'cancelled' });
+                        showToast('Pesanan berhasil dibatalkan');
+                    }
+                };
+
+                const toggleExpandTx = (id) => {
+                    expandedTx.value = expandedTx.value === id ? null : id;
+                };
+
+                const toggleGroup = (id) => {
+                    expandedUser.value = expandedUser.value === id ? null : id;
+                };
+
+                const getToolName = (id) => {
+                    const t = tools.value.find(tool => tool.id === id);
+                    return t ? t.name : 'Alat Lab';
+                };
+
+                const sortedHistory = computed(() => {
+                    let list = history.value;
+                    if (user.value?.role !== 'admin') {
+                        list = list.filter(h => h.user_id === user.value.id);
+                    }
+                    return [...list].sort((a,b) => b.id - a.id);
+                });
+
+                const adminGroupedHistory = computed(() => {
+                    const groups = {};
+                    history.value.forEach(h => {
+                        if(!groups[h.user_id]) {
+                            groups[h.user_id] = { user_id: h.user_id, user_name: h.user_name, user_nim: h.user_nim || '-', scores: [] };
+                        }
+                        groups[h.user_id].scores.push(h);
+                    });
+                    return Object.values(groups).map(g => {
+                        const passCount = g.scores.filter(s => s.score >= 80).length;
+                        return {
+                            ...g,
+                            avgScore: Math.round(g.scores.reduce((a,b)=>a+b.score,0) / g.scores.length),
+                            progress: `${passCount}/${g.scores.length}`
+                        };
+                    });
+                });
+
+                return {
+                    route, user, navigate, doLogin, doLogout, loginForm, loginError, registerForm, registerError, doRegister, showSplash, isLoading, toast,
+                    showPasswordModal, passwordForm, passwordError, doChangePassword, showHelpModal, handlePhotoUpload,
+                    tools, filteredTools, searchQuery, jenisAlatOptions, filterJenisList, selectedJenis,
+                    currentToolId, currentTool, currentSOPs, hasUnderstood,
+                    quizState, currentQuizzes, currentQuestion, currentQuestionOptions, selectAnswer, nextQuestion,
+                    products, formatRp,
+                    cart, cartItems, cartTotal, cartCount, addToCart, updateQty, removeFromCart, checkoutWhatsApp, getCartQty,
+                    history, sortedHistory, adminGroupedHistory, getToolName,
+                    transactions, filteredTransactions, selectedTxFilter, expandedTx, toggleExpandTx, expandedUser, toggleGroup, getStatusColor, getStatusLabel, getAllowedStatuses, updateTxStatus, cancelOrder,
+                    editMode, editFormData, editSOPsList, editPartsList, openEditTool, saveTool, deleteTool, openEditProduct, saveProduct, deleteProduct, handleImageUpload, ytEmbed
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
