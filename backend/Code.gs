@@ -58,6 +58,7 @@ function handleRequest(e, method) {
       case 'getTransactions': result = actionGetTransactions(payload); break;
       case 'createTransaction': result = actionCreateTransaction(payload); break;
       case 'updateTransactionStatus': result = actionUpdateTransactionStatus(payload); break;
+      case 'ping': result = { success: true, message: 'pong' }; break;
       case 'forceInit': 
         initDatabase();
         result = { success: true, message: 'Database forced init' };
@@ -274,19 +275,39 @@ function actionGetHistory(payload) {
 }
 
 function actionSaveHistory(payload) {
-  // fill user details from users sheet? Assume payload provides valid user_name/nim or BE looks it up.
-  // We'll trust payload for user_name, user_nim, score.
+  const users = sheetToObjects('users');
+  const user = users.find(u => u.id == payload.user_id) || {};
+  
+  const hSheet = getSheet_('history');
+  const hList = sheetToObjects('history', hSheet);
+  
+  const existingIdx = hList.findIndex(h => h.user_id == payload.user_id && h.tool_id == payload.tool_id);
+  
+  if (existingIdx > -1) {
+    const existing = hList[existingIdx];
+    if (payload.score > Number(existing.score)) {
+      updateRow_('history', existingIdx, {
+        id: Date.now(),
+        score: payload.score,
+        date: payload.date || new Date().toLocaleDateString('id-ID')
+      }, hSheet);
+      return { success: true, message: 'Skor diperbarui' };
+    } else {
+      return { success: true, message: 'Skor tidak lebih tinggi' };
+    }
+  }
+
   const row = {
     id: Date.now(),
     user_id: payload.user_id,
-    user_name: payload.user_name || 'User',
-    user_nim: payload.user_nim || '-',
+    user_name: payload.user_name || user.name || 'User',
+    user_nim: payload.user_nim || user.nim || '-',
     tool_id: payload.tool_id,
     score: payload.score,
     date: payload.date || new Date().toLocaleDateString('id-ID')
   };
-  appendObject_('history', row);
-  return { success: true };
+  appendObject_('history', row, hSheet);
+  return { success: true, message: 'Skor baru ditambahkan' };
 }
 
 function actionGetTransactions(payload) {

@@ -1324,8 +1324,17 @@
                                      case 'getProducts': resolve({ success: true, data: products.value }); break;
                                      case 'getHistory': resolve({ success: true, data: history.value }); break;
                                      case 'saveHistory':
-                                         const newHistory = { ...payload, id: Date.now(), user_name: user.value.name, user_nim: user.value.nim || '-', date: new Date().toLocaleDateString('id-ID') };
-                                         history.value.push(newHistory);
+                                         const existingIdx = history.value.findIndex(h => h.user_id === payload.user_id && h.tool_id === payload.tool_id);
+                                         if (existingIdx > -1) {
+                                             if (payload.score > history.value[existingIdx].score) {
+                                                 history.value[existingIdx].score = payload.score;
+                                                 history.value[existingIdx].date = new Date().toLocaleDateString('id-ID');
+                                                 history.value[existingIdx].id = Date.now();
+                                             }
+                                         } else {
+                                             const newHistory = { ...payload, id: Date.now(), user_name: user.value.name, user_nim: user.value.nim || '-', date: new Date().toLocaleDateString('id-ID') };
+                                             history.value.push(newHistory);
+                                         }
                                          resolve({ success: true });
                                          break;
                                     default: resolve({ success: false });
@@ -2011,12 +2020,32 @@
                     if (user.value?.role !== 'admin') {
                         list = list.filter(h => h.user_id === user.value.id);
                     }
-                    return [...list].sort((a,b) => b.id - a.id);
+                    
+                    // Deduplicate keeping max score
+                    const deduped = {};
+                    list.forEach(h => {
+                        const key = `${h.user_id}_${h.tool_id}`;
+                        if (!deduped[key] || h.score > deduped[key].score) {
+                            deduped[key] = { ...h };
+                        }
+                    });
+                    
+                    return Object.values(deduped).sort((a,b) => b.id - a.id);
                 });
 
                 const adminGroupedHistory = computed(() => {
                     const groups = {};
+                    
+                    // Deduplicate per user per tool first
+                    const dedupedHist = {};
                     history.value.forEach(h => {
+                        const key = `${h.user_id}_${h.tool_id}`;
+                        if (!dedupedHist[key] || h.score > dedupedHist[key].score) {
+                            dedupedHist[key] = { ...h };
+                        }
+                    });
+
+                    Object.values(dedupedHist).forEach(h => {
                         if(!groups[h.user_id]) {
                             groups[h.user_id] = { user_id: h.user_id, user_name: h.user_name, user_nim: h.user_nim || '-', scores: [] };
                         }
