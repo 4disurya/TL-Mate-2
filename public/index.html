@@ -1348,23 +1348,34 @@
                 };
 
                 // Lifecycle
-                onMounted(async () => {
+                onMounted(() => {
                     setTimeout(() => showSplash.value = false, 2500);
                     if (user.value && (route.value === '/login' || route.value === '/register')) navigate('/');
-                    if (user.value) await loadInitialData();
+                    if (user.value) loadInitialData();
                 });
 
                 // Actions
                 const loadInitialData = async () => {
                     if (USE_MOCK) return; // Refs are already loaded from localStorage
-                    tools.value = (await fetchData('getTools')).data || [];
-                    products.value = (await fetchData('getProducts')).data || [];
-                    history.value = (await fetchData('getHistory')).data || [];
-                    sops.value = (await fetchData('getSOPs')).data || [];
-                    quizzes.value = (await fetchData('getQuizzes')).data || [];
-                    transactions.value = (await fetchData('getTransactions', { user_id: user.value.id, role: user.value.role })).data || [];
+                    const [toolsRes, productsRes, historyRes, sopsRes, quizzesRes, transactionsRes] = await Promise.all([
+                        fetchData('getTools'),
+                        fetchData('getProducts'),
+                        fetchData('getHistory'),
+                        fetchData('getSOPs'),
+                        fetchData('getQuizzes'),
+                        fetchData('getTransactions', { user_id: user.value?.id, role: user.value?.role })
+                    ]);
+                    
+                    if (toolsRes.data) tools.value = toolsRes.data;
+                    if (productsRes.data) products.value = productsRes.data;
+                    if (historyRes.data) history.value = historyRes.data;
+                    if (sopsRes.data) sops.value = sopsRes.data;
+                    if (quizzesRes.data) quizzes.value = quizzesRes.data;
+                    if (transactionsRes.data) transactions.value = transactionsRes.data;
+
                     if (user.value?.role === 'admin') {
-                        users.value = (await fetchData('getUsers', { role: 'admin' })).data || [];
+                        const usersRes = await fetchData('getUsers', { role: 'admin' });
+                        if (usersRes.data) users.value = usersRes.data;
                     }
                 };
 
@@ -1381,7 +1392,7 @@
                     if (res.success && res.data) {
                         user.value = res.data;
                         localStorage.setItem('tlm_user', JSON.stringify(res.data));
-                        await loadInitialData();
+                        loadInitialData();
                         navigate('/');
                         showToast("Berhasil login!");
                     } else {
