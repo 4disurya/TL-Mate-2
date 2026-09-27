@@ -45,12 +45,18 @@
             max-width: 430px;
             margin: 0 auto;
             min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(180deg, #FFFFFF 0%, #EFF4EC 100%);
             position: relative;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+
+        .h-dvh {
+            height: 100vh;
+            height: 100dvh;
         }
 
         .glass-card {
@@ -217,7 +223,7 @@
                 </div>
 
                 <!-- DASHBOARD VIEW -->
-                <div v-else-if="route === '/'" class="flex-1 flex flex-col pb-24 h-screen overflow-y-auto no-scrollbar" key="dashboard">
+                <div v-else-if="route === '/'" class="flex-1 flex flex-col pb-24 h-dvh overflow-y-auto no-scrollbar" key="dashboard">
                     <div class="p-5 pt-14 flex justify-between items-center sticky top-0 bg-brand-dark/50 backdrop-blur-md z-10 border-b border-slate-200">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center gap-2">
@@ -611,7 +617,7 @@
                 </div>
 
                 <!-- TOKO VIEW -->
-                <div v-else-if="route === '/toko'" class="flex-1 flex flex-col h-screen overflow-hidden" key="toko">
+                <div v-else-if="route === '/toko'" class="flex-1 flex flex-col h-dvh overflow-hidden" key="toko">
                     <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex justify-between items-center">
                         <div class="flex gap-3 items-center">
                             <img src="logo-icon.png" alt="TL Mate" class="w-10 h-10 rounded-lg">
@@ -930,7 +936,7 @@
                 </div>
 
                 <!-- HISTORY VIEW -->
-                <div v-else-if="route === '/history'" class="flex-1 flex flex-col h-screen overflow-hidden" key="history">
+                <div v-else-if="route === '/history'" class="flex-1 flex flex-col h-dvh overflow-hidden" key="history">
                     <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 border-b border-slate-200 flex gap-3 items-center">
                         <img src="logo-icon.png" alt="TL Mate" class="w-10 h-10 rounded-lg">
                         <div>
@@ -997,7 +1003,7 @@
                 </div>
 
                 <!-- PROFILE VIEW -->
-                <div v-else-if="route === '/profile'" class="flex-1 flex flex-col h-screen overflow-hidden" key="profile">
+                <div v-else-if="route === '/profile'" class="flex-1 flex flex-col h-dvh overflow-hidden" key="profile">
                     <div class="p-5 pt-14 pb-4 sticky top-0 bg-brand-dark/80 backdrop-blur-md z-10 flex justify-center items-center gap-2">
                         <img src="logo-icon.png" alt="TL Mate" class="w-8 h-8 rounded-lg">
                         <h1 class="text-2xl font-bold">Profil Saya</h1>
@@ -1085,7 +1091,7 @@
             </transition>
 
             <!-- BOTTOM NAVIGATION (Only show on main tabs) -->
-            <div v-if="['/', '/toko', '/history', '/profile'].includes(route)" class="absolute bottom-0 w-full glass-nav px-6 pb-8 pt-4 flex justify-between items-center rounded-t-[32px]">
+            <div v-if="['/', '/toko', '/history', '/profile'].includes(route)" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 glass-nav px-6 pb-8 pt-4 flex justify-between items-center rounded-t-[32px]">
                 <button @click="navigate('/')" class="flex flex-col items-center gap-1 transition-colors" :class="route === '/' ? 'text-brand-info' : 'text-white/60'">
                     <svg class="w-6 h-6" :fill="route === '/' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     <span class="text-[10px] font-medium">Home</span>
