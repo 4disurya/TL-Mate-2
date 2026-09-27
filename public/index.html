@@ -1279,9 +1279,15 @@
 
                 // Router Watcher
                 window.addEventListener('hashchange', () => {
-                    route.value = window.location.hash.slice(1) || '/';
+                    const newRoute = window.location.hash.slice(1) || '/';
+                    route.value = newRoute;
                     if (!user.value && route.value !== '/login' && route.value !== '/register') {
                         navigate('/login');
+                    } else if (newRoute.startsWith('/quiz/')) {
+                        const qId = parseInt(newRoute.split('/')[2]);
+                        if (currentToolId.value !== qId || quizQuestions.value.length === 0) {
+                            initQuiz(qId);
+                        }
                     }
                 });
 
@@ -1360,7 +1366,10 @@
                     if (!user.value) fetchData('ping').catch(() => {});
                     
                     if (user.value && (route.value === '/login' || route.value === '/register')) navigate('/');
-                    if (user.value) loadInitialData();
+                    if (user.value) {
+                        loadInitialData();
+                        if (route.value.startsWith('/quiz/')) initQuiz(parseInt(route.value.split('/')[2]));
+                    }
                 });
 
                 // Actions
@@ -1545,10 +1554,13 @@
                 };
 
                 const navigate = (path) => {
+                    if (window.location.hash.slice(1) === path && path.startsWith('/quiz/')) {
+                        // Forcing init if navigating to same quiz hash
+                        initQuiz(parseInt(path.split('/')[2]));
+                    }
                     window.location.hash = path;
                     expandedUser.value = null;
                     if (path.startsWith('/tool/')) hasUnderstood.value = false;
-                    if (path.startsWith('/quiz/')) initQuiz(path.split('/')[2]);
                 };
 
                 const showToast = (msg) => {
