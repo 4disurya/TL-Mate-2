@@ -170,7 +170,7 @@
                             <span v-else class="animate-pulse">Memuat...</span>
                         </button>
                         <div class="flex flex-col items-center gap-2 mt-2">
-                            <button @click="showForgotModal = true" class="text-sm font-semibold text-brand-accent hover:underline">Lupa password?</button>
+                            <button @click="doForgotPasswordWhatsApp" class="text-sm font-semibold text-brand-accent hover:underline">Lupa password?</button>
                             <p class="text-center text-sm text-secondary">
                                 Belum memiliki akun? <button @click="navigate('/register')" class="text-brand-info font-semibold hover:underline">Buat akun baru</button>
                             </p>
@@ -1036,23 +1036,6 @@
                     </div>
 
                     <!-- Modals -->
-                    <div v-if="showForgotModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
-                        <div class="glass-card w-full max-w-sm">
-                            <h2 class="font-bold text-brand-info uppercase text-xs tracking-wider mb-4 text-center">Lupa Password</h2>
-                            <p class="text-xs text-secondary mb-4 text-center">Masukkan nama atau NIM Anda untuk dikirimkan ke Admin via WhatsApp.</p>
-                            <div class="flex flex-col gap-3">
-                                <div>
-                                    <label class="text-xs text-secondary mb-1 block">Nama Mahasiswa</label>
-                                    <input v-model="forgotName" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:border-brand-info outline-none" placeholder="Contoh: Budi Santoso">
-                                </div>
-                                <div class="flex gap-3 mt-2">
-                                    <button @click="showForgotModal = false" class="btn-lab-ghost flex-1 py-2.5 rounded-lg text-sm font-bold">Batal</button>
-                                    <button @click="doForgotPasswordWhatsApp" class="bg-brand-success text-white flex-1 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-brand-success/90">Kirim WA</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div v-if="showPasswordModal" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-5">
                         <div class="glass-card w-full max-w-sm">
                             <h2 class="font-bold text-brand-accent uppercase text-xs tracking-wider mb-4 text-center">Ubah Password</h2>
@@ -1262,8 +1245,6 @@
                 // Form & UI State
                 const loginForm = ref({ email: '', password: '' });
                 const loginError = ref('');
-                const showForgotModal = ref(false);
-                const forgotName = ref('');
                 const registerForm = ref({ name: '', nim: '', email: '', password: '', confirm: '' });
                 const registerError = ref('');
                 const showPasswordModal = ref(false);
@@ -1443,13 +1424,11 @@
                 };
 
                 const doForgotPasswordWhatsApp = () => {
-                    const name = forgotName.value.trim() || 'mahasiswa';
-                    const text = `hai admin, Akun ${name} tolong reset pasword, thanks`;
+                    const ident = loginForm.value.email.trim() || 'mahasiswa';
+                    const text = `hai admin, Akun ${ident} tolong reset pasword, thanks`;
                     const waNumber = "6281242826898";
                     const link = `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`;
                     window.open(link, '_blank');
-                    showForgotModal.value = false;
-                    forgotName.value = '';
                 };
 
                 const openResetModal = (uId) => {
@@ -1959,7 +1938,7 @@
 
                 return {
                     route, user, navigate, doLogin, doLogout, loginForm, loginError, registerForm, registerError, doRegister, showSplash, isLoading, toast,
-                    showForgotModal, forgotName, doForgotPasswordWhatsApp,
+                    doForgotPasswordWhatsApp,
                     showPasswordModal, passwordForm, passwordError, doChangePassword, showHelpModal, handlePhotoUpload,
                     showResetModal, resetForm, resetError, openResetModal, doAdminResetPassword,
                     tools, filteredTools, searchQuery, jenisAlatOptions, filterJenisList, selectedJenis,

@@ -85,7 +85,7 @@ function handleRequest(e, method) {
 function actionLogin(payload) {
   const users = sheetToObjects('users');
   const hashedPw = hash_(payload.password);
-  const user = users.find(u => u.email === payload.email && u.password === hashedPw);
+  const user = users.find(u => u.email === payload.email && (u.password === hashedPw || u.password === payload.password));
   
   if (user) {
     delete user.password; // Do not return password hash
@@ -125,7 +125,8 @@ function actionChangePassword(payload) {
   if (rowIndex === -1) return { success: false, error: 'User not found' };
   
   const user = users[rowIndex];
-  if (user.password !== hash_(payload.old)) {
+  const hashedOld = hash_(payload.old);
+  if (user.password !== hashedOld && user.password !== payload.old) {
     return { success: false, error: 'Password lama salah' };
   }
   
